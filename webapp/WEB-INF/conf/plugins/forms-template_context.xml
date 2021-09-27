@@ -4,6 +4,14 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd" >
 
-
+    <!-- DAO -->
+    <bean id="forms-template.templateReferenceItemFieldDao" class="fr.paris.lutece.plugins.forms.modules.template.business.TemplateReferenceItemFieldDao" />
+    <bean id="forms-template.templateFieldDAO" class="fr.paris.lutece.plugins.forms.modules.template.business.TemplateFieldDAO" />
+    <bean id="forms-template.templateEntryDAO" class="fr.paris.lutece.plugins.forms.modules.template.business.TemplateEntryDAO" />
+    <bean id="forms-template.templateStepDAO" class="fr.paris.lutece.plugins.forms.modules.template.business.TemplateStepDAO" />
+    <bean id="forms-template.templateQuestionDAO" class="fr.paris.lutece.plugins.forms.modules.template.business.TemplateQuestionDAO" />
+    <bean id="forms-template.templateControlDAO" class="fr.paris.lutece.plugins.forms.modules.template.business.TemplateControlDAO" />
+    <bean id="forms-template.templateDisplayDAO" class="fr.paris.lutece.plugins.forms.modules.template.business.TemplateDisplayDAO" />
+    <bean id="forms-template.templateGroupDAO" class="fr.paris.lutece.plugins.forms.modules.template.business.TemplateGroupDAO" />
 
 </beans>

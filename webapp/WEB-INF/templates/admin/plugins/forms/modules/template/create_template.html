@@ -1,0 +1,14 @@
+<@box>
+    <@boxHeader title='#i18n{module.forms.template.manageTemplates.title}' />
+    <@boxBody>
+        <@tform method='post' name='create_template' id='create_template' action='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp'>
+            <@formGroup labelFor='title' labelKey='#i18n{forms.create_step.labelTitle}' helpKey='#i18n{forms.create_step.labelTitle.help}' mandatory=true>
+                 <@input type='text' name='title' value='${step.title!}' />
+            </@formGroup>
+            <@formGroup labelFor='description' labelKey='#i18n{forms.create_step.labelDescription}' helpKey='#i18n{forms.create_step.labelDescription.help}' >
+                 <@input type='textarea' name='description'>${step.description!}</@input>
+            </@formGroup>
+            <@formsButton okAction='createTemplate' viewAction='manageTemplates' />
+        </@tform>
+    </@boxBody>
+</@box>

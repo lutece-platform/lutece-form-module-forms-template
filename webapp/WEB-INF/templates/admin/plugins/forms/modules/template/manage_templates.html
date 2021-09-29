@@ -1,0 +1,27 @@
+<@row>
+    <@columns>
+		<@box color='primary'>
+			<@boxHeader title='#i18n{module.forms.template.manageTemplates.title}' class='is-align-items-center' boxTools=true>
+                <@aButton href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=createTemplate' buttonIcon='plus' title='#i18n{module.forms.template.manageTemplates.buttonAdd}' hideTitle=['xs','sm'] class='card-header-icon' color='secondary' />
+            </@boxHeader>
+            <@boxBody>
+            	<@table>
+                    <@tr>
+                        <@th>#i18n{module.forms.template.manageTemplates.columnTitle}</@th>
+                        <@th>#i18n{module.forms.template.manageTemplates.columnDescription}</@th>
+                        <@th>#i18n{module.forms.template.manageTemplates.columnActions}</@th>
+                    </@tr>
+                    <#list template_list as template>
+                    	<@tr>
+                            <@td>${template.title}</@td>
+                            <@td>${template.description}</@td>
+                            <@td></@td>
+                       	</@tr>
+                    </#list>
+                </@table>
+                <@paginationAdmin paginator=paginator combo=1 showcount=0 />
+            </@boxBody>
+		</@box>
+    </@columns>
+</@row>
+<@toastr infos=infos warnings=warnings errors=errors />

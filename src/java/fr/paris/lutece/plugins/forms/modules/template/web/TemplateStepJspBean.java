@@ -1,5 +1,6 @@
 package fr.paris.lutece.plugins.forms.modules.template.web;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +25,9 @@ import fr.paris.lutece.plugins.forms.modules.template.business.TemplateQuestionH
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateStepHome;
 import fr.paris.lutece.plugins.forms.modules.template.service.ITemplateService;
 import fr.paris.lutece.plugins.forms.modules.template.service.TemplateService;
+import fr.paris.lutece.plugins.forms.service.download.FormDatabaseFileService;
 import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeCheckBox;
+import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeComment;
 import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeDate;
 import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeRadioButton;
 import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeSelect;
@@ -32,6 +35,7 @@ import fr.paris.lutece.plugins.forms.util.FormsConstants;
 import fr.paris.lutece.plugins.forms.util.FormsEntryUtils;
 import fr.paris.lutece.plugins.forms.web.ICompositeDisplay;
 import fr.paris.lutece.plugins.forms.web.admin.AbstractJspBean;
+import fr.paris.lutece.plugins.forms.web.entrytype.EntryTypeCommentDisplayService;
 import fr.paris.lutece.plugins.forms.web.exception.CodeAlreadyExistsException;
 import fr.paris.lutece.plugins.genericattributes.business.Entry;
 import fr.paris.lutece.plugins.genericattributes.business.EntryType;
@@ -42,6 +46,8 @@ import fr.paris.lutece.plugins.genericattributes.service.entrytype.IEntryTypeSer
 import fr.paris.lutece.plugins.referencelist.service.ReferenceListService;
 import fr.paris.lutece.portal.service.admin.AccessDeniedException;
 import fr.paris.lutece.portal.service.admin.AdminUserService;
+import fr.paris.lutece.portal.service.file.FileService;
+import fr.paris.lutece.portal.service.file.IFileStoreServiceProvider;
 import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.template.AppTemplateService;
@@ -87,22 +93,27 @@ public class TemplateStepJspBean extends AbstractJspBean
     private static final String TEMPLATE_CREATE_TEMPLATES_STEP = "/admin/plugins/forms/modules/template/create_template.html";
     private static final String TEMPLATE_MODIFY_TEMPLATES_STEP = "/admin/plugins/forms/modules/template/modify_template.html";
     private static final String TEMPLATE_CREATE_GROUP = "/admin/plugins/forms/modules/template/create_group.html";
+    private static final String TEMPLATE_MODIFY_GROUP = "/admin/plugins/forms/modules/template/modify_group.html";
     private static final String TEMPLATE_CREATE_QUESTION = "/admin/plugins/forms/modules/template/create_question.html";
+    private static final String TEMPLATE_MODIFY_QUESTION = "/admin/plugins/forms/modules/template/modify_question.html";
     private static final String TEMPLATE_BREADCRUMBS = "/admin/plugins/forms/modules/template/entries/all_entry_breadcrumbs.html";
     
     // Views
     private static final String VIEW_MANAGE_TEMPLATES = "manageTemplates";
     private static final String VIEW_CREATE_TEMPLATE = "createTemplate";
-    private static final String VIEW_MODIFY_TEMPLATE = "modifyTemplate";
+    private static final String VIEW_MODIFY_TEMPLATE = "manageQuestions";
     private static final String VIEW_CREATE_QUESTION = "createQuestion";
     private static final String VIEW_MODIFY_QUESTION = "modifyQuestion";
     private static final String VIEW_CREATE_GROUP = "createGroup";
+    private static final String VIEW_MODIFY_GROUP = "modifyGroup";
     
     // Actions
     private static final String ACTION_CREATE_TEMPLATE = "createTemplate";
     private static final String ACTION_CREATE_GROUP = "createGroup";
+    private static final String ACTION_MODIFY_GROUP = "modifyGroup";
     private static final String ACTION_CREATE_QUESTION = "createQuestion";
     private static final String ACTION_CREATE_QUESTION_AND_MANAGE_ENTRIES = "createQuestionAndManageEntries";
+    private static final String ACTION_MODIFY_QUESTION = "modifyQuestion";
     
     // Properties
     private static final String PROPERTY_ITEM_PER_PAGE = "forms-template.itemsPerPage";
@@ -145,6 +156,8 @@ public class TemplateStepJspBean extends AbstractJspBean
     private static final String GROUP_VALIDATION_ATTRIBUTES_PREFIX = "forms.model.entity.group.attribute.";
     
     private ITemplateService _templateService = SpringContextService.getBean( TemplateService.BEAN_NAME );
+    private IFileStoreServiceProvider _fileStoreProvider = FileService.getInstance( )
+            .getFileStoreServiceProvider( FormDatabaseFileService.FILE_STORE_PROVIDER_NAME );
     
     private Step _step;
     private int _nIdParentSelected = 0;
@@ -402,7 +415,7 @@ public class TemplateStepJspBean extends AbstractJspBean
         _nIdParentSelected = Integer.parseInt( request.getParameter( FormsConstants.PARAMETER_ID_DISPLAY_PARENT ) );
 
         _step = TemplateStepHome.findByPrimaryKey( nIdTemplate );
-        if ( ( _step == null ) )
+        if ( _step == null )
         {
             return redirectView( request, VIEW_MANAGE_TEMPLATES );
         }
@@ -639,5 +652,294 @@ public class TemplateStepJspBean extends AbstractJspBean
             }
         }
         return false;
+    }
+    
+    /**
+     * Gets the group modification page
+     * 
+     * @param request
+     *            The HTTP request
+     * @return The entry creation page
+     */
+    @View( value = VIEW_MODIFY_GROUP )
+    public String getModifyGroup( HttpServletRequest request )
+    {
+
+        int nIdStep = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE );
+        int nIdGroup = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_GROUP ), FormsConstants.DEFAULT_ID_VALUE );
+
+        if ( _step == null || nIdStep != FormsConstants.DEFAULT_ID_VALUE && nIdStep != _step.getId( ) )
+        {
+            _step = TemplateStepHome.findByPrimaryKey( nIdStep );
+        }
+
+        if ( _step == null )
+        {
+            return redirectView( request, VIEW_MANAGE_TEMPLATES );
+        }
+
+        if ( _group == null || nIdGroup != FormsConstants.DEFAULT_ID_VALUE && _group.getId( ) != nIdGroup )
+        {
+            _group = TemplateGroupHome.findByPrimaryKey( nIdGroup );
+        }
+
+        Map<String, Object> model = getModel( );
+        model.put( FormsConstants.MARK_STEP, _step );
+        model.put( FormsConstants.MARK_GROUP, _group );
+
+        setPageTitleProperty( PROPERTY_CREATE_GROUP_TITLE );
+
+        HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_MODIFY_GROUP, getLocale( ), model );
+
+        return getAdminPage( template.getHtml( ) );
+    }
+    
+    /**
+     * Perform the Group creation
+     * 
+     * @param request
+     *            The HTTP request
+     * @return The URL to go after performing the action
+     */
+    @Action( ACTION_MODIFY_GROUP )
+    public String doModifyGroup( HttpServletRequest request )
+    {
+        int nIdStep = Integer.parseInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ) );
+
+        if ( _step == null || nIdStep != _step.getId( ) )
+        {
+            _step = TemplateStepHome.findByPrimaryKey( nIdStep );
+        }
+
+        _group = _group != null ? _group : new Group( );
+        populate( _group, request );
+
+        if ( !validateGroup( ) )
+        {
+            return redirectView( request, VIEW_MODIFY_GROUP );
+        }
+
+        TemplateGroupHome.update( _group );
+
+        if ( _group.getId( ) == -1 )
+        {
+            addError( ERROR_GROUP_NOT_UPDATED, getLocale( ) );
+        }
+        else
+        {
+            addInfo( INFO_GROUP_UPDATED, getLocale( ) );
+        }
+
+        return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _step.getId( ) );
+    }
+    
+    /**
+     * Gets the Question entry modification page
+     * 
+     * @param request
+     *            The HTTP request
+     * @return The entry modification page
+     */
+    @View( value = VIEW_MODIFY_QUESTION )
+    public String getModifyQuestion( HttpServletRequest request )
+    {
+
+        int nIdStep = Integer.parseInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ) );
+
+        if ( _step == null || nIdStep != _step.getId( ) )
+        {
+            _step = TemplateStepHome.findByPrimaryKey( nIdStep );
+        }
+
+        String strIdQuestion = request.getParameter( FormsConstants.PARAMETER_ID_QUESTION );
+        int nIdQuestion = -1;
+
+        if ( StringUtils.isNotEmpty( strIdQuestion ) )
+        {
+            nIdQuestion = Integer.parseInt( strIdQuestion );
+        }
+
+        _question = TemplateQuestionHome.findByPrimaryKey( nIdQuestion );
+        _entry = TemplateEntryHome.findByPrimaryKey( _question.getIdEntry( ) );
+
+        List<Field> listField = new ArrayList<>( _entry.getFields( ).size( ) );
+
+        for ( Field field : _entry.getFields( ) )
+        {
+            field = TemplateFieldHome.findByPrimaryKey( field.getIdField( ) );
+            listField.add( field );
+        }
+
+        _entry.setFields( listField );
+        IEntryTypeService entryTypeService = EntryTypeServiceManager.getEntryTypeService( _entry );
+
+        Form mockForm = new Form( );
+        mockForm.setTitle( _step.getTitle( ) );
+        
+        Map<String, Object> model = new HashMap<>( );
+        model.put( FormsConstants.MARK_ENTRY, _entry );
+        model.put( FormsConstants.MARK_FORM, mockForm );
+        model.put( FormsConstants.MARK_STEP, _step );
+        model.put( FormsConstants.MARK_QUESTION, _question );
+
+        model.put( MARK_LIST, _entry.getFields( ) );
+
+        model.put( MARK_WEBAPP_URL, AppPathService.getBaseUrl( request ) );
+        model.put( MARK_LOCALE, AdminUserService.getLocale( request ).getLanguage( ) );
+        model.put( MARK_ENTRY_TYPE_SERVICE, EntryTypeServiceManager.getEntryTypeService( _entry ) );
+        model.put( MARK_ACTION, "jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp" );
+        
+        if ( Boolean.TRUE.equals( _entry.getEntryType( ).getComment( ) ) )
+        {
+            setPageTitleProperty( PROPERTY_MODIFY_COMMENT_TITLE );
+        }
+        else
+        {
+            setPageTitleProperty( PROPERTY_MODIFY_QUESTION_TITLE );
+        }
+
+        boolean canBeFiltered = Arrays.asList( FILTERABLE ).contains( entryTypeService.getClass( ) );
+
+        model.put( FormsConstants.MARK_CAN_BE_FILTERED, canBeFiltered );
+        model.put( FormsConstants.MARK_BREADCRUMBS, AppTemplateService.getTemplate( TEMPLATE_BREADCRUMBS, request.getLocale( ), model ).getHtml( ) );
+        model.put( FormsConstants.MARK_QUESTION_MODIFY_TEMPLATE,
+                AppTemplateService.getTemplate( TEMPLATE_MODIFY_QUESTION, request.getLocale( ), model ).getHtml( ) );
+        model.put( FormsConstants.MARK_ANONYMIZATION_HELP, entryTypeService.getAnonymizationHelpMessage( request.getLocale( ) ) );
+
+        if ( entryTypeService instanceof EntryTypeComment )
+        {
+            Field fieldFile = _entry.getFieldByCode( IEntryTypeService.FIELD_DOWNLOADABLE_FILE );
+            if ( fieldFile != null )
+            {
+                Map<String, String> additionnalData = new HashMap<>( );
+                additionnalData.put( FileService.PARAMETER_RESOURCE_ID, String.valueOf( _entry.getIdResource( ) ) );
+                additionnalData.put( FileService.PARAMETER_RESOURCE_TYPE, Form.RESOURCE_TYPE );
+                additionnalData.put( FileService.PARAMETER_PROVIDER, _fileStoreProvider.getName( ) );
+
+                model.put( EntryTypeCommentDisplayService.MARK_FILENAME, fieldFile.getTitle( ) );
+                model.put( EntryTypeCommentDisplayService.MARK_URL_DOWNLOAD_BO,
+                        _fileStoreProvider.getFileDownloadUrlBO( fieldFile.getValue( ), additionnalData ) );
+            }
+        }
+        if ( Arrays.asList( ENTRY_TYPE_USER_REF_LIT ).contains( entryTypeService.getClass( ) ) )
+        {
+            model.put( FormsConstants.MARK_REFERENCE_LIST_SELECT, ReferenceListService.getInstance( ).getReferencesList( ) );
+        }
+        HtmlTemplate template = AppTemplateService.getTemplate( entryTypeService.getTemplateModify( _entry, false ), getLocale( ), model );
+
+        return getAdminPage( template.getHtml( ) );
+    }
+    
+    /**
+     * Perform the Question update with its Entry
+     * 
+     * @param request
+     *            The HTTP request
+     * @return The URL to go after performing the action
+     */
+    @Action( ACTION_MODIFY_QUESTION )
+    public String doModifyQuestion( HttpServletRequest request )
+    {
+        try
+        {
+            String strReturnUrl = processQuestionUpdate( request );
+
+            if ( strReturnUrl != null )
+            {
+                return redirect( request, strReturnUrl );
+            }
+            else
+            {
+                addInfo( INFO_QUESTION_UPDATED, getLocale( ) );
+            }
+        }
+        catch( CodeAlreadyExistsException e )
+        {
+            AppLogService.error( ERROR_CODE_EXISTS + e.getCode( ), e );
+            addError( ERROR_QUESTION_CODE_ALREADY_EXISTS, getLocale( ) );
+        }
+        return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _step.getId( ) );
+    }
+    
+    /**
+     * Perform the entry modification
+     * 
+     * @param request
+     *            The HTTP request
+     * @return The URL to go after performing the action
+     */
+    private String processQuestionUpdate( HttpServletRequest request ) throws CodeAlreadyExistsException
+    {
+        int nIdStep = Integer.parseInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ) );
+
+        if ( _step == null || nIdStep != _step.getId( ) )
+        {
+            _step = TemplateStepHome.findByPrimaryKey( nIdStep );
+        }
+
+        String strIdQuestion = request.getParameter( FormsConstants.PARAMETER_ID_QUESTION );
+        int nIdQuestion = -1;
+
+        if ( StringUtils.isNotEmpty( strIdQuestion ) )
+        {
+            nIdQuestion = Integer.parseInt( strIdQuestion );
+        }
+
+        if ( _question == null || _question.getId( ) != nIdQuestion )
+        {
+            _question = TemplateQuestionHome.findByPrimaryKey( nIdQuestion );
+        }
+
+        _entry = TemplateEntryHome.findByPrimaryKey( _question.getIdEntry( ) );
+        String strError = EntryTypeServiceManager.getEntryTypeService( _entry ).getRequestData( _entry, request, getLocale( ) );
+
+        if ( strError != null )
+        {
+            return strError;
+        }
+
+        if ( checkCodeAlreadyExists( _entry.getCode( ), _step.getIdForm( ), _entry.getIdEntry( ) ) )
+        {
+            throw new CodeAlreadyExistsException( _entry.getCode( ) );
+        }
+
+        TemplateEntryHome.update( _entry );
+
+        if ( _entry.getFields( ) != null )
+        {
+            for ( Field field : _entry.getFields( ) )
+            {
+                // Check if the field already exists in the database
+                Field fieldStored = TemplateFieldHome.findByPrimaryKey( field.getIdField( ) );
+
+                if ( fieldStored != null )
+                {
+                    // If it exists, update
+                    TemplateFieldHome.update( field );
+                }
+                else
+                {
+                    // If it does not exist, create
+                    TemplateFieldHome.create( field );
+                }
+            }
+        }
+        String strTitle = Boolean.TRUE.equals( _entry.getEntryType( ).getComment( ) ) ? I18nService.getLocalizedString( ENTRY_COMMENT_TITLE, getLocale( ) )
+                : _entry.getTitle( );
+        _question.setVisibleMultiviewGlobal( request.getParameter( FormsConstants.PARAMETER_MULTIVIEW_GLOBAL ) != null );
+        _question.setVisibleMultiviewFormSelected( request.getParameter( FormsConstants.PARAMETER_MULTIVIEW_FORM_SELECTED ) != null );
+        _question.setFiltrableMultiviewGlobal( request.getParameter( FormsConstants.PARAMETER_FILTERABLE_MULTIVIEW_GLOBAL ) != null );
+        _question.setFiltrableMultiviewFormSelected( request.getParameter( FormsConstants.PARAMETER_FILTERABLE_MULTIVIEW_FORM_SELECTED ) != null );
+        String columnTitle = request.getParameter( FormsConstants.PARAMETER_COLUMN_TITLE );
+        columnTitle = StringUtils.isEmpty( columnTitle ) ? _question.getTitle( ) : columnTitle;
+        _question.setColumnTitle( columnTitle );
+        _question.setTitle( strTitle );
+        _question.setCode( _entry.getCode( ) );
+        _question.setDescription( _entry.getComment( ) );
+        _question.setMultiviewColumnOrder( NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_MULTIVIEW_ORDER ), 0 ) );
+        TemplateQuestionHome.update( _question );
+
+        return null;
+
     }
 }

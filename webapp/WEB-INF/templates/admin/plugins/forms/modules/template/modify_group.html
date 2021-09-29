@@ -5,16 +5,17 @@
 <@row>
 	<@columns>
 		<@box>
-			<@boxHeader title='${step.title}' />
+			<@boxHeader title='#i18n{forms.modify_group.title}' />
 			<@boxBody>
-				<@tform method='post' name='create_group' action='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp'>
+				<@tform class="form-horizontal" method="post" name="modify_group" action="jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp">
 					<@messages errors=errors />
 					<@input type='hidden' id='id_step' name='id_step' value='${step.id}' />
-					<@input type='hidden' id='id_parent' name='id_parent' value='${id_parent}' />
-					<@formGroup labelFor='title' labelKey='#i18n{forms.create_group.labelTitle}' helpKey='#i18n{forms.create_group.labelTitle.help}' mandatory=true>
-						 <@input type='text' name='title' value='${group.title!}' />
+					<@input type='hidden' id='id' name='id' value='${group.id}' />
+					
+					<@formGroup labelFor='title' labelKey='#i18n{forms.modify_group.labelTitle}' helpKey='#i18n{forms.modify_group.labelTitle.help}' mandatory=true>
+						<@input type='text' name='title' value='${group.title!}' />
 					</@formGroup>
-					<@formGroup labelFor='description' labelKey='#i18n{forms.create_group.labelDescription}' helpKey='#i18n{forms.create_group.labelDescription.help}'>
+					<@formGroup labelKey='#i18n{forms.modify_group.labelDescription}' helpKey='#i18n{forms.modify_group.labelDescription.help}' >
 						<@input type='textarea' name='description' class='richtext'>${group.description!}</@input>
 					</@formGroup>
 					<@formGroup id='iterate_group'>
@@ -23,20 +24,20 @@
 						</#if>
 				   </@formGroup>
 					<div id="iteration_group">
-						<@formGroup labelFor='iterationMin' labelKey='#i18n{forms.create_group.labelIterationMin}' helpKey='#i18n{forms.create_group.labelIterationMin.help}'>
+						<@formGroup labelKey='#i18n{forms.create_group.labelIterationMin}' helpKey='#i18n{forms.create_group.labelIterationMin.help}'>
 							<@input type='text' name='iterationMin' value='${group.iterationMin!}' />
 						</@formGroup>
-						<@formGroup labelFor='iterationMax' labelKey='#i18n{forms.create_group.labelIterationMax}' helpKey='#i18n{forms.create_group.labelIterationMax.help}'>
+						<@formGroup labelKey='#i18n{forms.create_group.labelIterationMax}' helpKey='#i18n{forms.create_group.labelIterationMax.help}' >
 							<@input type='text' name='iterationMax' value='${group.iterationMax!}' />
 						</@formGroup>
-						<@formGroup labelFor='iterationAddLabel' labelKey='#i18n{forms.create_group.labelIterationAddLabel}' helpKey='#i18n{forms.create_group.labelIterationAddLabel.help}'>
+						<@formGroup labelKey='#i18n{forms.create_group.labelIterationAddLabel}' helpKey='#i18n{forms.create_group.labelIterationAddLabel.help}'>
 							<@input type='text' name='iterationAddLabel' value='${group.iterationAddLabel!}' />
 						</@formGroup>
-						<@formGroup labelFor='iterationRemoveLabel' labelKey='#i18n{forms.create_group.labelIterationRemoveLabel}' helpKey='#i18n{forms.create_group.labelIterationRemoveLabel.help}'>
+						<@formGroup labelKey='#i18n{forms.create_group.labelIterationRemoveLabel}' helpKey='#i18n{forms.create_group.labelIterationRemoveLabel.help}'>
 							<@input type='text' name='iterationRemoveLabel' value='${group.iterationRemoveLabel!}' />
-						</@formGroup> 
+						</@formGroup>
 					</div>
-					<@formsButton okAction='createGroup' viewAction='manageQuestions' />
+					<@formsButton okAction='modifyGroup' viewAction='manageQuestions' />
 				</@tform>
 			</@boxBody>
 		</@box>

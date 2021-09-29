@@ -1,0 +1,38 @@
+<@formBreadCrumb home='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp'>
+	<@breadcrumbItem class='active is-active'>${step.title}</@breadcrumbItem>
+</@formBreadCrumb>
+<@row>
+    <@columns>
+        <@box>
+			<@boxHeader title='${step.title}' />
+            <@boxBody>
+            	<@tform class='forms-questions' method='post' name='modify_template' action='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp'>
+    				<@input type='hidden' id='id_step' name='id_step' value='${step.id}' />
+	            	<@row>
+	                    <@columns sm=10>
+	                    	<div class="radio">
+                                <label>
+                                    <input type="radio" id="parent_step" name="id_parent" value="0" <#if id_parent=0>checked</#if>>
+                                    <span class="group-radio-label"> ${step.title}</span>
+                                </label>
+                            </div>
+	                    </@columns>
+	                    <@columns sm=2 id='sticky-container'>
+						    <@ul class='list-group unstyled' id='info-right'>
+						        <#list entry_type_list as item>
+						        	<@li>
+						            	<#if item.group>
+						            		<@button type='submit' class='btn-add-entry' style='btn-block' color='primary' name='view_createGroup' value='' title='#i18n{forms.manage_questions.buttonAdd} ${item.title}' buttonNested=true buttonIcon='${item.iconName}'>${item.title}</@button>
+						            	<#else>
+						                    <@button type='submit' class='btn-add-entry' style='btn-block' color='primary' name='view_createQuestion' value='${item.idType}' title='#i18n{forms.manage_questions.buttonAdd} ${item.title}' buttonNested=true buttonIcon='${item.iconName}'>${item.title}</@button>
+						                </#if>
+						            </@li>
+						        </#list>
+						    </@ul>
+						</@columns>
+	               	</@row>
+               	</@tform>
+            </@boxBody>
+        </@box>
+    </@columns>
+</@row>

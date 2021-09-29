@@ -15,7 +15,9 @@
                     	<@tr>
                             <@td>${template.title}</@td>
                             <@td>${template.description}</@td>
-                            <@td></@td>
+                            <@td>
+                            	<@aButton href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=modifyTemplate&id_step=${template.id}' title='#i18n{forms.action.modify.name}' hideTitle=['all'] color='primary' buttonIcon='edit' size='sm' />
+                            </@td>
                        	</@tr>
                     </#list>
                 </@table>

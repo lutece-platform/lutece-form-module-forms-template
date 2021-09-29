@@ -14,4 +14,6 @@
     <bean id="forms-template.templateDisplayDAO" class="fr.paris.lutece.plugins.forms.modules.template.business.TemplateDisplayDAO" />
     <bean id="forms-template.templateGroupDAO" class="fr.paris.lutece.plugins.forms.modules.template.business.TemplateGroupDAO" />
 
+    <!-- Services -->
+    <bean id="forms-template.templateService" class="fr.paris.lutece.plugins.forms.modules.template.service.TemplateService" />
 </beans>

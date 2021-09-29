@@ -49,6 +49,8 @@ import fr.paris.lutece.portal.service.admin.AdminUserService;
 import fr.paris.lutece.portal.service.file.FileService;
 import fr.paris.lutece.portal.service.file.IFileStoreServiceProvider;
 import fr.paris.lutece.portal.service.i18n.I18nService;
+import fr.paris.lutece.portal.service.message.AdminMessage;
+import fr.paris.lutece.portal.service.message.AdminMessageService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.template.AppTemplateService;
 import fr.paris.lutece.portal.service.util.AppLogService;
@@ -61,8 +63,9 @@ import fr.paris.lutece.portal.web.util.LocalizedPaginator;
 import fr.paris.lutece.util.ReferenceList;
 import fr.paris.lutece.util.html.AbstractPaginator;
 import fr.paris.lutece.util.html.HtmlTemplate;
+import fr.paris.lutece.util.url.UrlItem;
 
-@Controller( controllerJsp = "ManageTemplatesStep.jsp", controllerPath = "jsp/admin/plugins/forms/modules/template", right = "TEMPLATE_STEP_MANAGEMENT" )
+@Controller( controllerJsp = "ManageTemplatesStep.jsp", controllerPath = "jsp/admin/plugins/forms/modules/template/", right = "TEMPLATE_STEP_MANAGEMENT" )
 public class TemplateStepJspBean extends AbstractJspBean
 {
     private static final Class<?> [ ] ENTRY_TYPE_USER_REF_LIT = {
@@ -106,6 +109,7 @@ public class TemplateStepJspBean extends AbstractJspBean
     private static final String VIEW_MODIFY_QUESTION = "modifyQuestion";
     private static final String VIEW_CREATE_GROUP = "createGroup";
     private static final String VIEW_MODIFY_GROUP = "modifyGroup";
+    private static final String VIEW_CONFIRM_REMOVE_COMPOSITE = "getConfirmRemoveComposite";
     
     // Actions
     private static final String ACTION_CREATE_TEMPLATE = "createTemplate";
@@ -114,6 +118,7 @@ public class TemplateStepJspBean extends AbstractJspBean
     private static final String ACTION_CREATE_QUESTION = "createQuestion";
     private static final String ACTION_CREATE_QUESTION_AND_MANAGE_ENTRIES = "createQuestionAndManageEntries";
     private static final String ACTION_MODIFY_QUESTION = "modifyQuestion";
+    private static final String ACTION_REMOVE_COMPOSITE = "removeComposite";
     
     // Properties
     private static final String PROPERTY_ITEM_PER_PAGE = "forms-template.itemsPerPage";
@@ -142,6 +147,10 @@ public class TemplateStepJspBean extends AbstractJspBean
     private static final String INFO_QUESTION_DUPLICATED = "forms.info.question.duplicated";
     private static final String ENTRY_COMMENT_TITLE = "forms.manage_questions.type.comment.title";
     
+    // Warning messages
+    private static final String WARNING_CONFIRM_REMOVE_QUESTION = "forms.warning.deleteComposite.confirmRemoveQuestion";
+    private static final String WARNING_CONFIRM_REMOVE_GROUP_ANY_QUESTIONS = "forms.warning.deleteComposite.confirmRemoveGroup";
+
     // Error messages
     private static final String ERROR_QUESTION_NOT_CREATED = "forms.error.question.notCreated";
     private static final String ERROR_GROUP_NOT_CREATED = "forms.error.group.notCreated";
@@ -164,7 +173,7 @@ public class TemplateStepJspBean extends AbstractJspBean
 
     private Group _group;
     private Entry _entry;
-
+    private FormDisplay _formDisplay;
     private Question _question;
     
     /**
@@ -940,6 +949,88 @@ public class TemplateStepJspBean extends AbstractJspBean
         TemplateQuestionHome.update( _question );
 
         return null;
-
     }
+
+        /**
+         * Gets the confirmation page of question/group deletion
+         * 
+         * @param request
+         *            The HTTP request
+         * @return the confirmation page of delete entry
+         */
+        @View( value = VIEW_CONFIRM_REMOVE_COMPOSITE )
+        public String getConfirmRemoveComposite( HttpServletRequest request )
+        {
+
+            String strMessage = StringUtils.EMPTY;
+            int nIdStep = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE );
+
+            if ( _step == null || nIdStep != FormsConstants.DEFAULT_ID_VALUE && nIdStep != _step.getId( ) )
+            {
+                _step = TemplateStepHome.findByPrimaryKey( nIdStep );
+            }
+
+            if ( _step == null )
+            {
+                return redirectView( request, VIEW_MANAGE_TEMPLATES );
+            }
+
+            int nIdDisplay = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_DISPLAY ), -1 );
+            if ( _formDisplay == null || _formDisplay.getId( ) != nIdDisplay )
+            {
+                _formDisplay = TemplateDisplayHome.findByPrimaryKey( nIdDisplay );
+            }
+            
+            if ( _formDisplay == null )
+            {
+                return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _step.getId( ) );
+            }
+
+            if ( CompositeDisplayType.QUESTION.getLabel( ).equalsIgnoreCase( _formDisplay.getCompositeType( ) ) )
+            {
+                strMessage = WARNING_CONFIRM_REMOVE_QUESTION;
+            }
+
+            if ( CompositeDisplayType.GROUP.getLabel( ).equalsIgnoreCase( _formDisplay.getCompositeType( ) ) )
+            {
+                strMessage = WARNING_CONFIRM_REMOVE_GROUP_ANY_QUESTIONS;
+            }
+
+            UrlItem url = new UrlItem( getActionUrl( ACTION_REMOVE_COMPOSITE ) );
+            url.addParameter( FormsConstants.PARAMETER_ID_DISPLAY, nIdDisplay );
+
+            String strMessageUrl = AdminMessageService.getMessageUrl( request, strMessage, url.getUrl( ), AdminMessage.TYPE_CONFIRMATION );
+            return redirect( request, strMessageUrl );
+        }
+        
+        /**
+         * Perform the question suppression
+         * 
+         * @param request
+         *            The HTTP request
+         * @return The URL to go after performing the action
+         */
+        @Action( ACTION_REMOVE_COMPOSITE )
+        public String doRemoveComposite( HttpServletRequest request )
+        {
+
+            int nIdDisplay = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_DISPLAY ), -1 );
+            if ( _formDisplay == null || _formDisplay.getId( ) != nIdDisplay )
+            {
+                _formDisplay = TemplateDisplayHome.findByPrimaryKey( nIdDisplay );
+            }
+            
+            if ( _formDisplay == null )
+            {
+                return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _formDisplay.getStepId( ) );
+            }
+
+            _templateService.deleteDisplayAndDescendants( _formDisplay );
+
+            List<FormDisplay> listFormDisplaySibling = TemplateDisplayHome.getFormDisplayListByParent( _formDisplay.getStepId( ), _formDisplay.getParentId( ) );
+            _templateService.rebuildDisplayPositionSequence( listFormDisplaySibling );
+
+            addInfo( INFO_DELETE_COMPOSITE_SUCCESSFUL, getLocale( ) );
+            return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _formDisplay.getStepId( ) );
+        }
 }

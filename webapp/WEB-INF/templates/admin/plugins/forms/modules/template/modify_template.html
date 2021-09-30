@@ -67,17 +67,20 @@
                                             			<@aButton hideTitle=['all'] href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=modifyGroup&id_step=${step.id}&id_group=${composite.formDisplay.compositeId}' title='#i18n{forms.manage_questions.action.modifyGroup}' buttonIcon='pencil' size='sm' />
                                             		<#else>
                                             			<@aButton hideTitle=['all'] href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=modifyQuestion&id_step=${step.id}&id_question=${composite.formDisplay.compositeId}' title='#i18n{forms.manage_questions.action.modifyQuestion}' buttonIcon='pencil' />
+                                            			<@aButton hideTitle=['all'] href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=modifyConditionControl&id_display=${composite.formDisplay.id}&id_step=${step.id}' class='btn-iframe' title='#i18n{forms.manage_questions.action.condition}' buttonIcon='question' />
                                             		</#if>
                                             		<@aButton hideTitle=['all'] href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=getConfirmRemoveComposite&id_step=${step.id}&id_display=${composite.formDisplay.id}' title='#i18n{forms.manage_questions.action.removeQuestion}' buttonIcon='trash' color='danger' size='sm' />
                                             	</@btnGroup>
                                             </@div>
 											<@td hide=['xs'] sm=1>
+												<#if composite.formDisplay.displayControl??><@icon style='question' /></#if>
 											</@td>
                                             <@td hide=['xs'] sm=4>
                                             	<#if group>
                                         			<@aButton hideTitle=['all'] href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=modifyGroup&id_step=${step.id}&id_group=${composite.formDisplay.compositeId}' title='#i18n{forms.manage_questions.action.modifyGroup}' buttonIcon='pencil' size='sm' />
                                         		<#else>
                                         			<@aButton hideTitle=['all'] href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=modifyQuestion&id_step=${step.id}&id_question=${composite.formDisplay.compositeId}' title='#i18n{forms.manage_questions.action.modifyQuestion}' buttonIcon='pencil' size='sm' />
+                                        			<@button type='button' style='modal' buttonTargetId='#qModal' params='data-url="jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=modifyConditionControl&id_display=${composite.formDisplay.id}&id_step=${step.id}"' title='#i18n{forms.manage_questions.action.condition}' hideTitle=['all'] buttonIcon='question' size='sm' />
                                         		</#if>
                                         		<@aButton hideTitle=['all'] href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=getConfirmRemoveComposite&id_step=${step.id}&id_display=${composite.formDisplay.id}' title='#i18n{forms.manage_questions.action.removeQuestion}' buttonIcon='trash' color='danger' size='sm' />
 									        </@td>
@@ -110,3 +113,4 @@
         </@box>
     </@columns>
 </@row>
+<@formModal id='qModal' />

@@ -3,20 +3,26 @@ package fr.paris.lutece.plugins.forms.modules.template.web;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 
 import fr.paris.lutece.plugins.forms.business.CompositeDisplayType;
+import fr.paris.lutece.plugins.forms.business.Control;
+import fr.paris.lutece.plugins.forms.business.ControlType;
 import fr.paris.lutece.plugins.forms.business.Form;
 import fr.paris.lutece.plugins.forms.business.FormDisplay;
 import fr.paris.lutece.plugins.forms.business.Group;
 import fr.paris.lutece.plugins.forms.business.Question;
 import fr.paris.lutece.plugins.forms.business.Step;
+import fr.paris.lutece.plugins.forms.modules.template.business.TemplateControlHome;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateDisplayHome;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateEntryHome;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateFieldHome;
@@ -25,6 +31,7 @@ import fr.paris.lutece.plugins.forms.modules.template.business.TemplateQuestionH
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateStepHome;
 import fr.paris.lutece.plugins.forms.modules.template.service.ITemplateService;
 import fr.paris.lutece.plugins.forms.modules.template.service.TemplateService;
+import fr.paris.lutece.plugins.forms.service.EntryServiceManager;
 import fr.paris.lutece.plugins.forms.service.download.FormDatabaseFileService;
 import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeCheckBox;
 import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeComment;
@@ -33,6 +40,7 @@ import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeRadioButton;
 import fr.paris.lutece.plugins.forms.service.entrytype.EntryTypeSelect;
 import fr.paris.lutece.plugins.forms.util.FormsConstants;
 import fr.paris.lutece.plugins.forms.util.FormsEntryUtils;
+import fr.paris.lutece.plugins.forms.validation.IValidator;
 import fr.paris.lutece.plugins.forms.web.ICompositeDisplay;
 import fr.paris.lutece.plugins.forms.web.admin.AbstractJspBean;
 import fr.paris.lutece.plugins.forms.web.entrytype.EntryTypeCommentDisplayService;
@@ -60,6 +68,7 @@ import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.Action;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.View;
 import fr.paris.lutece.portal.web.util.LocalizedPaginator;
+import fr.paris.lutece.util.ReferenceItem;
 import fr.paris.lutece.util.ReferenceList;
 import fr.paris.lutece.util.html.AbstractPaginator;
 import fr.paris.lutece.util.html.HtmlTemplate;
@@ -100,6 +109,7 @@ public class TemplateStepJspBean extends AbstractJspBean
     private static final String TEMPLATE_CREATE_QUESTION = "/admin/plugins/forms/modules/template/create_question.html";
     private static final String TEMPLATE_MODIFY_QUESTION = "/admin/plugins/forms/modules/template/modify_question.html";
     private static final String TEMPLATE_BREADCRUMBS = "/admin/plugins/forms/modules/template/entries/all_entry_breadcrumbs.html";
+    private static final String TEMPLATE_MODIFY_CONDITION_CONTROL = "/admin/plugins/forms/modules/template/modify_condition_control.html";
     
     // Views
     private static final String VIEW_MANAGE_TEMPLATES = "manageTemplates";
@@ -110,6 +120,8 @@ public class TemplateStepJspBean extends AbstractJspBean
     private static final String VIEW_CREATE_GROUP = "createGroup";
     private static final String VIEW_MODIFY_GROUP = "modifyGroup";
     private static final String VIEW_CONFIRM_REMOVE_COMPOSITE = "getConfirmRemoveComposite";
+    private static final String VIEW_MODIFY_CONTROL = "modifyControl";
+    private static final String VIEW_MODIFY_CONDITION_CONTROL = "modifyConditionControl";
     
     // Actions
     private static final String ACTION_CREATE_TEMPLATE = "createTemplate";
@@ -129,6 +141,7 @@ public class TemplateStepJspBean extends AbstractJspBean
     private static final String PROPERTY_MODIFY_QUESTION_TITLE = "forms.modifyEntry.titleQuestion";
     private static final String PROPERTY_MOVE_GROUP_TITLE = "forms.moveComposite.group.title";
     private static final String PROPERTY_MOVE_QUESTION_TITLE = "forms.moveComposite.question.title";
+    private static final String PROPERTY_PAGE_TITLE_MODIFY_CONTROL = "forms.modify_control.pageTitle";
     
     // Parameters
     private static final String PARAMETER_PAGE_INDEX = "page_index";
@@ -146,6 +159,12 @@ public class TemplateStepJspBean extends AbstractJspBean
     private static final String INFO_DELETE_COMPOSITE_SUCCESSFUL = "forms.info.deleteComposite.successful";
     private static final String INFO_QUESTION_DUPLICATED = "forms.info.question.duplicated";
     private static final String ENTRY_COMMENT_TITLE = "forms.manage_questions.type.comment.title";
+    private static final String INFO_CONTROL_CREATED = "forms.info.control.created";
+    private static final String INFO_CONTROL_UPDATED = "forms.info.control.updated";
+    private static final String INFO_CONTROL_REMOVED = "forms.info.control.removed";
+    private static final String MESSAGE_CONFIRM_REMOVE_CONTROL = "forms.message.confirmRemoveControl";
+    private static final String INFO_CONDITION_GROUP_TITLE = "forms.modify_condition_group_control.title";
+    private static final String INFO_CONDITION_QUESTION_TITLE = "forms.modify_condition_question_control.title";
     
     // Warning messages
     private static final String WARNING_CONFIRM_REMOVE_QUESTION = "forms.warning.deleteComposite.confirmRemoveQuestion";
@@ -175,6 +194,12 @@ public class TemplateStepJspBean extends AbstractJspBean
     private Entry _entry;
     private FormDisplay _formDisplay;
     private Question _question;
+
+    private ControlType _controlType;
+    private int _nIdTarget;
+    private String _strControlTitle;
+    private String _strControlTemplate;
+    private Control _control;
     
     /**
      * Build the Manage View
@@ -673,7 +698,6 @@ public class TemplateStepJspBean extends AbstractJspBean
     @View( value = VIEW_MODIFY_GROUP )
     public String getModifyGroup( HttpServletRequest request )
     {
-
         int nIdStep = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE );
         int nIdGroup = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_GROUP ), FormsConstants.DEFAULT_ID_VALUE );
 
@@ -1032,5 +1056,316 @@ public class TemplateStepJspBean extends AbstractJspBean
 
             addInfo( INFO_DELETE_COMPOSITE_SUCCESSFUL, getLocale( ) );
             return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _formDisplay.getStepId( ) );
+        }
+        
+        /**
+         * Returns the form to modify a control for conditionnal question
+         *
+         * @param request
+         *            The Http request
+         * @return the html code of the control form
+         */
+        @View( VIEW_MODIFY_CONDITION_CONTROL )
+        public String getModifyConditionControl( HttpServletRequest request )
+        {
+            _controlType = ControlType.CONDITIONAL;
+
+            int nIdStep = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE );
+
+            if ( _step == null || nIdStep != FormsConstants.DEFAULT_ID_VALUE && nIdStep != _step.getId( ) )
+            {
+                _step = TemplateStepHome.findByPrimaryKey( nIdStep );
+            }
+
+            if ( _step == null )
+            {
+                return redirectView( request, VIEW_MANAGE_TEMPLATES );
+            }
+            
+            int nIdDisplay = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_DISPLAY ), -1 );
+            FormDisplay formDisplay = TemplateDisplayHome.findByPrimaryKey( nIdDisplay  );
+            
+            if ( formDisplay == null )
+            {
+                return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _step.getId( ) );
+            }
+
+            if ( formDisplay.getCompositeType( ).equals( FormsConstants.COMPOSITE_QUESTION_TYPE ) )
+            {
+                _question = TemplateQuestionHome.findByPrimaryKey( formDisplay.getCompositeId( ) );
+
+                if ( _question == null )
+                {
+                    return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _step.getId( ) );
+                }
+
+                Object [ ] args = {
+                        _question.getTitle( ),
+                };
+
+                _strControlTitle = I18nService.getLocalizedString( INFO_CONDITION_QUESTION_TITLE, args, request.getLocale( ) );
+            }
+            else
+                if ( formDisplay.getCompositeType( ).equals( FormsConstants.COMPOSITE_GROUP_TYPE ) )
+                {
+                    _group = TemplateGroupHome.findByPrimaryKey( formDisplay.getCompositeId( ) );
+
+                    if ( _group == null )
+                    {
+                        return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _step.getId( ) );
+                    }
+
+                    Object [ ] args = {
+                            _group.getTitle( ),
+                    };
+
+                    _strControlTitle = I18nService.getLocalizedString( INFO_CONDITION_GROUP_TITLE, args, request.getLocale( ) );
+                }
+
+            List<Control> listConditionalControl = TemplateControlHome.getControlByControlTargetAndType( nIdDisplay, _controlType );
+
+            if ( CollectionUtils.isNotEmpty( listConditionalControl ) )
+            {
+                _control = listConditionalControl.get( 0 );
+            }
+            else
+                if ( _control != null )
+                {
+
+                    _control.setListIdQuestion( null );
+                }
+
+            if ( _control == null || CollectionUtils.isEmpty( _control.getListIdQuestion( ) ) )
+            {
+                _control = new Control( );
+                _control.setIdControlTarget( nIdDisplay );
+                _control.setControlType( ControlType.CONDITIONAL.getLabel( ) );
+            }
+            else
+            {
+                Question question = TemplateQuestionHome.findByPrimaryKey( _control.getListIdQuestion( ).iterator( ).next( ) );
+                _step = TemplateStepHome.findByPrimaryKey( question.getIdStep( ) );
+            }
+
+            _strControlTemplate = TEMPLATE_MODIFY_CONDITION_CONTROL;
+
+            return redirectView( request, VIEW_MODIFY_CONTROL );
+        }
+        
+        /**
+         * Returns the form to modify a control
+         *
+         * @param request
+         *            The Http request
+         * @return the html code of the control form
+         */
+        @View( VIEW_MODIFY_CONTROL )
+        public String getModifyControl( HttpServletRequest request )
+        {
+            if ( _step == null )
+            {
+                int nIdStep = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE );
+
+                _step = TemplateStepHome.findByPrimaryKey( nIdStep );
+            }
+
+            if ( _controlType != ControlType.CONDITIONAL && _control == null )
+            {
+                initControl( request );
+            }
+
+            if ( _control == null && !retrieveControlFromRequest( request ) )
+            {
+                return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _step.getId( ) );
+            }
+            if ( _control == null )
+            {
+                return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _step.getId( ) );
+            }
+            
+            Map<String, Object> model = getModel( );
+            buildControlModel( request, model );
+
+            return getPage( PROPERTY_PAGE_TITLE_MODIFY_CONTROL, _strControlTemplate, model );
+        }
+        
+        private void initControl( HttpServletRequest request )
+        {
+            int nIdControl = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_CONTROL ), FormsConstants.DEFAULT_ID_VALUE );
+
+            _control = TemplateControlHome.findByPrimaryKey( nIdControl );
+
+            if ( _control == null )
+            {
+                _control = new Control( );
+                _control.setControlType( _controlType.getLabel( ) );
+                _control.setIdControlTarget( _nIdTarget );
+
+                if ( _controlType.equals( ControlType.VALIDATION ) )
+                {
+                    Set<Integer> listQuestion = new HashSet<>( );
+                    listQuestion.add( _nIdTarget );
+                    _control.setListIdQuestion( listQuestion );
+                }
+            }
+            else
+            {
+                Question question = TemplateQuestionHome.findByPrimaryKey( _control.getListIdQuestion( ).iterator( ).next( ) );
+                _step = TemplateStepHome.findByPrimaryKey( question.getIdStep( ) );
+            }
+
+//            if ( _controlType.equals( ControlType.VALIDATION ) )
+//            {
+//                _strControlTemplate = TEMPLATE_MODIFY_QUESTION_CONTROL;
+//            }
+
+        }
+        
+        /**
+         * Retrieve the control object from request parameter
+         * 
+         * @param request
+         *            The request
+         * 
+         * @return false if an error occurred, true otherwise
+         */
+        private boolean retrieveControlFromRequest( HttpServletRequest request )
+        {
+            boolean bSuccess = true;
+            int nIdControl = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_CONTROL ), FormsConstants.DEFAULT_ID_VALUE );
+
+            if ( nIdControl == FormsConstants.DEFAULT_ID_VALUE )
+            {
+                bSuccess = false;
+            }
+
+            if ( _control == null || _control.getId( ) != nIdControl )
+            {
+                _control = TemplateControlHome.findByPrimaryKey( nIdControl );
+            }
+            return bSuccess;
+        }
+        
+        /**
+         * Build the model for Create and Modify Control views
+         * 
+         * @param request
+         *            the Http request
+         * @param model
+         *            the Model
+         */
+        private void buildControlModel( HttpServletRequest request, Map<String, Object> model )
+        {
+            String strValidatorName = request.getParameter( FormsConstants.PARAMETER_VALIDATOR_NAME );
+            String valSubmit = request.getParameter( FormsConstants.PARAMETER_VIEW_MODIFY_CONTROL );
+            int idStep = _step.getId( );
+            if ( request.getParameter( FormsConstants.PARAMETER_ID_STEP ) != null )
+            {
+                idStep = Integer.parseInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ) );
+            }
+
+            boolean bStepChanged = false;
+            if ( valSubmit != null && valSubmit.equals( FormsConstants.VALIDATE_STEP ) )
+            {
+                bStepChanged = true;
+            }
+
+            ReferenceList referenceListQuestion = new ReferenceList( );
+            for ( Question question : TemplateQuestionHome.getQuestionsListByStep( idStep ) )
+            {
+                referenceListQuestion.addItem( question.getId( ), question.getTitle( ) );
+            }
+
+            if ( StringUtils.isNotEmpty( strValidatorName ) && !strValidatorName.equals( _control.getValidatorName( ) ) )
+            {
+                _control.setValidatorName( strValidatorName );
+                _control.setValue( StringUtils.EMPTY );
+            }
+
+            int nIdQuestion;
+
+            if ( bStepChanged && CollectionUtils.isNotEmpty( referenceListQuestion ) )
+            {
+                _control.setListIdQuestion( null );
+                nIdQuestion = FormsConstants.DEFAULT_ID_VALUE;
+            }
+            else
+                if ( valSubmit != null && valSubmit.equals( FormsConstants.VALIDATE_VALIDATOR ) )
+                {
+                    nIdQuestion = FormsConstants.DEFAULT_ID_VALUE;
+                }
+                else
+                {
+                    nIdQuestion = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_QUESTION ), FormsConstants.DEFAULT_ID_VALUE );
+                }
+
+            String removeQuestion = request.getParameter( FormsConstants.VAL_REMOVE_QUESTION );
+            if ( removeQuestion != null && removeQuestion.equals( FormsConstants.VAL_REMOVE_QUESTION ) )
+            {
+                String idQuestionToRemove = request.getParameter( FormsConstants.PARAMETER_ID_QUESTION_TO_REMOVE );
+                Set<Integer> listIdQuestion = _control.getListIdQuestion( );
+                listIdQuestion.removeIf( p -> p.equals( Integer.parseInt( idQuestionToRemove ) ) );
+                _control.setListIdQuestion( listIdQuestion );
+            }
+
+            if ( nIdQuestion != FormsConstants.DEFAULT_ID_VALUE
+                    && ( _control.getListIdQuestion( ) == null || _control.getListIdQuestion( ).stream( ).noneMatch( p -> p.equals( nIdQuestion ) ) ) )
+            {
+
+                Set<Integer> listIdQuestion = ( _control.getListIdQuestion( ) != null ) ? _control.getListIdQuestion( ) : new HashSet<>( );
+                listIdQuestion.add( nIdQuestion );
+                _control.setListIdQuestion( listIdQuestion );
+                _control.setValidatorName( StringUtils.EMPTY );
+                _control.setValue( StringUtils.EMPTY );
+            }
+
+            if ( CollectionUtils.isNotEmpty( _control.getListIdQuestion( ) ) ) 
+            {
+                Question q = TemplateQuestionHome.findByPrimaryKey( _control.getListIdQuestion( ).iterator( ).next( ) );
+                EntryType ent = q.getEntry( ).getEntryType( );
+
+                ReferenceList refListAvailableValidator = EntryServiceManager.getInstance( ).getRefListAvailableValidator( ent );
+                for ( int idQuest : _control.getListIdQuestion( ) )
+                {
+                    Question question = TemplateQuestionHome.findByPrimaryKey( idQuest );
+                    if ( question != null && question.getEntry( ) != null )
+                    {
+                        EntryType entryType = question.getEntry( ).getEntryType( );
+                        ReferenceList refListAvailableValidatorTemp = EntryServiceManager.getInstance( ).getRefListAvailableValidator( entryType );
+                        ReferenceList refListAvailTemp = new ReferenceList( );
+                        for ( ReferenceItem refList : refListAvailableValidatorTemp )
+                        {
+                            if ( refListAvailableValidator.stream( ).anyMatch( p -> p.getCode( ).equals( refList.getCode( ) ) ) )
+                            {
+                                refListAvailTemp.add( refList );
+                            }
+                        }
+                        refListAvailableValidator = refListAvailTemp;
+                    }
+                }
+                model.put( FormsConstants.MARK_AVAILABLE_VALIDATORS, refListAvailableValidator );
+
+                if ( CollectionUtils.isNotEmpty( refListAvailableValidator ) && StringUtils.EMPTY.equals( _control.getValidatorName( ) ) )
+                {
+                    _control.setValidatorName( refListAvailableValidator.get( 0 ).getCode( ) );
+                }
+
+            }
+
+            String strValidatorTemplate = StringUtils.EMPTY;
+
+            if ( StringUtils.isNotEmpty( _control.getValidatorName( ) ) )
+            {
+                IValidator validator = EntryServiceManager.getInstance( ).getValidator( _control.getValidatorName( ) );
+                strValidatorTemplate = validator.getDisplayHtml( _control );
+            }
+
+            model.put( FormsConstants.MARK_QUESTION, _question );
+            model.put( FormsConstants.MARK_STEP, _step );
+            model.put( FormsConstants.MARK_CONTROL_TEMPLATE, strValidatorTemplate );
+            model.put( FormsConstants.MARK_CONTROL, _control );
+            model.put( FormsConstants.MARK_ID_STEP, idStep );
+            model.put( FormsConstants.MARK_QUESTION_LIST, referenceListQuestion );
+            model.put( FormsConstants.MARK_CONDITION_TITLE, _strControlTitle );
         }
 }

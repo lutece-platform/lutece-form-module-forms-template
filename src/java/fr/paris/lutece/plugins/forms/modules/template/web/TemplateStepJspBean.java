@@ -5,19 +5,23 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 
 import fr.paris.lutece.plugins.forms.business.CompositeDisplayType;
 import fr.paris.lutece.plugins.forms.business.Form;
 import fr.paris.lutece.plugins.forms.business.FormDisplay;
+import fr.paris.lutece.plugins.forms.business.FormDisplayHome;
 import fr.paris.lutece.plugins.forms.business.Step;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateDisplayHome;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateStepHome;
 import fr.paris.lutece.plugins.forms.modules.template.service.ITemplateService;
 import fr.paris.lutece.plugins.forms.modules.template.service.TemplateDatabaseService;
+import fr.paris.lutece.plugins.forms.modules.template.service.TemplateDisplayService;
 import fr.paris.lutece.plugins.forms.modules.template.service.TemplateService;
 import fr.paris.lutece.plugins.forms.service.IFormDatabaseService;
+import fr.paris.lutece.plugins.forms.service.IFormDisplayService;
 import fr.paris.lutece.plugins.forms.util.FormsConstants;
 import fr.paris.lutece.plugins.forms.util.FormsEntryUtils;
 import fr.paris.lutece.plugins.forms.web.ICompositeDisplay;
@@ -49,8 +53,6 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     private static final String MARK_TEMPLATE_LIST = "template_list";
     private static final String MARK_PAGINATOR = "paginator";
     private static final String MARK_NB_ITEMS_PER_PAGE = "nb_items_per_page";
-    private static final String MARK_LOCALE = "locale";
-    private static final String MARK_ACTION = "action";
 
     // Templates
     private static final String TEMPLATE_MANAGE_TEMPLATES_STEP = "/admin/plugins/forms/modules/template/manage_templates.html";
@@ -61,28 +63,21 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     private static final String TEMPLATE_CREATE_QUESTION = "/admin/plugins/forms/modules/template/create_question.html";
     private static final String TEMPLATE_MODIFY_QUESTION = "/admin/plugins/forms/modules/template/modify_question.html";
     private static final String TEMPLATE_BREADCRUMBS = "/admin/plugins/forms/modules/template/entries/all_entry_breadcrumbs.html";
+    private static final String TEMPLATE_MOVE_COMPOSITE = "/admin/plugins/forms/modules/template/move_composite.html";
 
     // Views
     private static final String VIEW_MANAGE_TEMPLATES = "manageTemplates";
     private static final String VIEW_CREATE_TEMPLATE = "createTemplate";
     private static final String VIEW_MODIFY_TEMPLATE = "manageQuestions";
-    private static final String VIEW_CREATE_QUESTION = "createQuestion";
-    private static final String VIEW_MODIFY_QUESTION = "modifyQuestion";
     private static final String VIEW_CONFIRM_REMOVE_COMPOSITE = "getConfirmRemoveComposite";
 
     // Actions
     private static final String ACTION_CREATE_TEMPLATE = "createTemplate";
-    private static final String ACTION_CREATE_GROUP = "createGroup";
-    private static final String ACTION_MODIFY_GROUP = "modifyGroup";
-    private static final String ACTION_CREATE_QUESTION = "createQuestion";
-    private static final String ACTION_CREATE_QUESTION_AND_MANAGE_ENTRIES = "createQuestionAndManageEntries";
-    private static final String ACTION_MODIFY_QUESTION = "modifyQuestion";
-    private static final String ACTION_REMOVE_COMPOSITE = "removeComposite";
 
     // Properties
     private static final String PROPERTY_ITEM_PER_PAGE = "forms-template.itemsPerPage";
     private static final String PROPERTY_CREATE_GROUP_TITLE = "forms.create_group.title";
-
+    
     // Parameters
     private static final String PARAMETER_PAGE_INDEX = "page_index";
 
@@ -91,21 +86,9 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
 
     // Infos messages
     private static final String INFO_TEMPLATE_CREATED = "module.forms.template.info.template.created";
-    private static final String INFO_QUESTION_CREATED = "forms.info.question.created";
-    private static final String INFO_QUESTION_UPDATED = "forms.info.question.updated";
-    private static final String INFO_DELETE_COMPOSITE_SUCCESSFUL = "forms.info.deleteComposite.successful";
-
-    // Warning messages
-    private static final String WARNING_CONFIRM_REMOVE_QUESTION = "forms.warning.deleteComposite.confirmRemoveQuestion";
-    private static final String WARNING_CONFIRM_REMOVE_GROUP_ANY_QUESTIONS = "forms.warning.deleteComposite.confirmRemoveGroup";
-
-    // Error messages
-    private static final String ERROR_QUESTION_CODE_ALREADY_EXISTS = "forms.error.question.codeAlreadyExists";
-    private static final String ERROR_CODE_EXISTS = " Provided code already exists ";
 
     private ITemplateService _templateService = SpringContextService.getBean( TemplateService.BEAN_NAME );
-    private FormDisplay _formDisplay;
-
+    
     /**
      * Build the Manage View
      * 
@@ -241,7 +224,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     @View( value = VIEW_CREATE_QUESTION )
     public String getCreateQuestion( HttpServletRequest request )
     {
-        Map<String, Object> model = initCreateQuestionModel( request, TEMPLATE_BREADCRUMBS, TEMPLATE_CREATE_QUESTION );
+        Map<String, Object> model = initCreateQuestionModel( request );
         if ( model == null )
         {
             return redirectView( request, VIEW_MANAGE_TEMPLATES );
@@ -250,7 +233,11 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         Form mockForm = new Form( );
         mockForm.setTitle( _step.getTitle( ) );
         model.put( FormsConstants.MARK_FORM, mockForm );
+        model.put( MARK_ADD_FILE_COMMENT, false );
         model.put( MARK_ACTION, "jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp" );
+        model.put( FormsConstants.MARK_BREADCRUMBS, AppTemplateService.getTemplate( TEMPLATE_BREADCRUMBS, request.getLocale( ), model ).getHtml( ) );
+        model.put( FormsConstants.MARK_QUESTION_CREATE_TEMPLATE,
+                AppTemplateService.getTemplate( TEMPLATE_CREATE_QUESTION, request.getLocale( ), model ).getHtml( ) );
         
         IEntryTypeService entryTypeService = EntryTypeServiceManager.getEntryTypeService( _entry );
         HtmlTemplate template = AppTemplateService.getTemplate( entryTypeService.getTemplateCreate( _entry, false ), getLocale( ), model );
@@ -359,12 +346,17 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     @View( value = VIEW_MODIFY_QUESTION )
     public String getModifyQuestion( HttpServletRequest request )
     {
-        Map<String, Object> model = initModifyQuestionModel( request, TEMPLATE_BREADCRUMBS, TEMPLATE_MODIFY_QUESTION );
+        Map<String, Object> model = initModifyQuestionModel( request );
         
         Form mockForm = new Form( );
         mockForm.setTitle( _step.getTitle( ) );
         model.put( FormsConstants.MARK_FORM, mockForm );
+        model.put( MARK_ADD_FILE_COMMENT, false );
         model.put( MARK_ACTION, "jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp" );
+        model.put( FormsConstants.MARK_BREADCRUMBS, AppTemplateService.getTemplate( TEMPLATE_BREADCRUMBS, request.getLocale( ), model ).getHtml( ) );
+        model.put( FormsConstants.MARK_QUESTION_MODIFY_TEMPLATE,
+                AppTemplateService.getTemplate( TEMPLATE_MODIFY_QUESTION, request.getLocale( ), model ).getHtml( ) );
+        
         IEntryTypeService entryTypeService = EntryTypeServiceManager.getEntryTypeService( _entry );
 
         HtmlTemplate template = AppTemplateService.getTemplate( entryTypeService.getTemplateModify( _entry, false ), getLocale( ), model );
@@ -475,36 +467,105 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
 
         if ( _formDisplay == null )
         {
-            return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _formDisplay.getStepId( ) );
+            return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _step.getId( ) );
         }
 
-        _templateService.deleteDisplayAndDescendants( _formDisplay );
+        getFormDisplayService( ).deleteDisplayAndDescendants( nIdDisplay );
 
-        List<FormDisplay> listFormDisplaySibling = TemplateDisplayHome.getFormDisplayListByParent( _formDisplay.getStepId( ), _formDisplay.getParentId( ) );
-        _templateService.rebuildDisplayPositionSequence( listFormDisplaySibling );
-
+        List<FormDisplay> listFormDisplaySibling = getFormDatabaseService( ).getFormDisplayListByParent( _formDisplay.getStepId( ), _formDisplay.getParentId( ) );
+        getFormDisplayService( ).rebuildDisplayPositionSequence( listFormDisplaySibling );
         addInfo( INFO_DELETE_COMPOSITE_SUCCESSFUL, getLocale( ) );
         return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _formDisplay.getStepId( ) );
     }
-
-    @Override
-    protected int getDisplayDepthFromParent( int parentGroup )
+    
+    /**
+     * Gets the Move component page
+     * 
+     * @param request
+     *            The HTTP request
+     * @return The move component page
+     */
+    @View( value = VIEW_MOVE_COMPOSITE )
+    public String getMoveComposite( HttpServletRequest request )
     {
-        int nDisplayDepth = 0;
-        if ( parentGroup > 0 )
+        Map<String, Object> model = initMoveCompositeModel( request );
+        if ( model == null )
         {
-            FormDisplay templateDisplayParent = TemplateDisplayHome.findByPrimaryKey( parentGroup );
-            if ( templateDisplayParent != null )
-            {
-                nDisplayDepth = templateDisplayParent.getDepth( ) + 1;
-            }
+            return redirectView( request, VIEW_MANAGE_TEMPLATES );
         }
-        return nDisplayDepth;
+        
+        HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_MOVE_COMPOSITE, getLocale( ), model );
+        return getAdminPage( template.getHtml( ) );
+    }
+    
+    /**
+     * Process the FormDisplay moving action
+     * 
+     * @param request
+     *            The HTTP request
+     * @return The move component page
+     */
+    @Action( ACTION_MOVE_COMPOSITE )
+    public String doMoveComposite( HttpServletRequest request )
+    {
+
+        boolean bGroupValidated = false;
+
+        int nIdDisplay = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_DISPLAY ), -1 );
+
+        if ( nIdDisplay == INTEGER_MINUS_ONE )
+        {
+            redirectToViewManageForm( request );
+        }
+
+        if ( _formDisplay == null || _formDisplay.getId( ) != nIdDisplay )
+        {
+            _formDisplay = FormDisplayHome.findByPrimaryKey( nIdDisplay );
+        }
+
+        String strIsGroupValidated = request.getParameter( FormsConstants.PARAMETER_GROUP_VALIDATED );
+        if ( StringUtils.isNotBlank( strIsGroupValidated ) )
+        {
+            bGroupValidated = BooleanUtils.toBoolean( strIsGroupValidated );
+        }
+
+        int nIdStepTarget = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), INTEGER_MINUS_ONE );
+        int nIdParentTarget = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_PARENT ), INTEGER_MINUS_ONE );
+        int nDisplayOrderTarget = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_DISPLAY_ORDER ), INTEGER_MINUS_ONE );
+
+        if ( ( nIdStepTarget == INTEGER_MINUS_ONE ) || ( nIdParentTarget == INTEGER_MINUS_ONE ) )
+        {
+            addError( ERROR_OCCURED_MOVING_COMPOSITE, getLocale( ) );
+            return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _formDisplay.getStepId( ) );
+        }
+
+        if ( nIdParentTarget != _nIdParentTarget )
+        {
+            bGroupValidated = false;
+        }
+
+        if ( !bGroupValidated )
+        {
+            addError( ERROR_STEP_OR_GROUP_NOT_VALIDATED, getLocale( ) );
+            return redirect( request, VIEW_MOVE_COMPOSITE, FormsConstants.PARAMETER_ID_DISPLAY, nIdDisplay );
+        }
+
+        moveDisplay( _formDisplay, nIdStepTarget, nIdParentTarget, nDisplayOrderTarget );
+
+        addInfo( INFO_MOVE_COMPOSITE_SUCCESSFUL, getLocale( ) );
+
+        return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _formDisplay.getStepId( ) );
     }
     
     @Override
     protected IFormDatabaseService initFormDatabaseService( )
     {
         return SpringContextService.getBean( TemplateDatabaseService.BEAN_NAME );
+    }
+    
+    @Override
+    protected IFormDisplayService initFormDisplayService( )
+    {
+        return SpringContextService.getBean( TemplateDisplayService.BEAN_NAME );
     }
 }

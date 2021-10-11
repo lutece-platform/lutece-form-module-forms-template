@@ -79,6 +79,12 @@ public class TemplateDatabaseService implements IFormDatabaseService
     {
         return TemplateGroupHome.findByPrimaryKey( idGroup );
     }
+    
+    @Override
+    public FormDisplay findDisplayByPrimaryKey( int idDisplay )
+    {
+        return TemplateDisplayHome.findByPrimaryKey( idDisplay );
+    }
 
     @Override
     public void createEntry( Entry entry )
@@ -108,5 +114,17 @@ public class TemplateDatabaseService implements IFormDatabaseService
     public void updateEntry( Entry entry )
     {
         TemplateEntryHome.update( entry );
+    }
+    
+    @Override
+    public List<FormDisplay> getFormDisplayListByParent( int nIdStep, int nIdParent )
+    {
+        return TemplateDisplayHome.getFormDisplayListByParent( nIdStep, nIdParent );
+    }
+    
+    @Override
+    public void updateFormDisplay( FormDisplay formDisplay )
+    {
+        TemplateDisplayHome.update( formDisplay );
     }
 }

@@ -2,14 +2,7 @@ package fr.paris.lutece.plugins.forms.modules.template.service;
 
 import java.util.List;
 
-import fr.paris.lutece.plugins.forms.business.CompositeDisplayType;
-import fr.paris.lutece.plugins.forms.business.Control;
-import fr.paris.lutece.plugins.forms.business.ControlType;
 import fr.paris.lutece.plugins.forms.business.FormDisplay;
-import fr.paris.lutece.plugins.forms.modules.template.business.TemplateControlHome;
-import fr.paris.lutece.plugins.forms.modules.template.business.TemplateDisplayHome;
-import fr.paris.lutece.plugins.forms.modules.template.business.TemplateGroupHome;
-import fr.paris.lutece.plugins.forms.modules.template.business.TemplateQuestionHome;
 import fr.paris.lutece.plugins.forms.modules.template.web.CompositeTemplateGroupDisplay;
 import fr.paris.lutece.plugins.forms.modules.template.web.CompositeTemplateQuestionDisplay;
 import fr.paris.lutece.plugins.forms.modules.template.web.TemplateDisplayTree;
@@ -43,63 +36,5 @@ public class TemplateService implements ITemplateService
             }
 
         return composite;
-    }
-    
-    @Override
-    public void deleteDisplayAndDescendants( FormDisplay formDisplayToDelete )
-    {
-        if ( formDisplayToDelete == null )
-        {
-            return;
-        }
-        
-        int formDisplayCompositeId = formDisplayToDelete.getCompositeId( );
-        List<FormDisplay> listChildrenDisplay = TemplateDisplayHome.getFormDisplayListByParent( formDisplayToDelete.getStepId( ),
-                formDisplayToDelete.getId( ) );
-
-        if ( CompositeDisplayType.QUESTION.getLabel( ).equalsIgnoreCase( formDisplayToDelete.getCompositeType( ) ) )
-        {
-            List<Control> listControl = TemplateControlHome.getControlByQuestionAndType( formDisplayCompositeId, ControlType.VALIDATION.getLabel( ) );
-
-            for ( Control control : listControl )
-            {
-                TemplateControlHome.remove( control.getId( ) );
-            }
-
-            listControl = TemplateControlHome.getControlByQuestionAndType( formDisplayCompositeId, ControlType.CONDITIONAL.getLabel( ) );
-
-            for ( Control control : listControl )
-            {
-                TemplateControlHome.remove( control.getId( ) );
-            }
-            TemplateControlHome.removeByControlTarget( formDisplayCompositeId, ControlType.CONDITIONAL );
-
-            // Delete the Question and its Entry
-            TemplateQuestionHome.remove( formDisplayCompositeId );
-        }
-
-        if ( CompositeDisplayType.GROUP.getLabel( ).equalsIgnoreCase( formDisplayToDelete.getCompositeType( ) ) )
-        {
-            TemplateGroupHome.remove( formDisplayCompositeId );
-        }
-
-        TemplateDisplayHome.remove( formDisplayToDelete.getId( ) );
-
-        for ( FormDisplay childDisplay : listChildrenDisplay )
-        {
-            deleteDisplayAndDescendants( childDisplay );
-        }
-    }
-    
-    @Override
-    public void rebuildDisplayPositionSequence( List<FormDisplay> listDisplay )
-    {
-        int nUpdatedPosition = 0;
-        for ( FormDisplay displayToUpdate : listDisplay )
-        {
-            nUpdatedPosition++;
-            displayToUpdate.setDisplayOrder( nUpdatedPosition );
-            TemplateDisplayHome.update( displayToUpdate );
-        }
     }
 }

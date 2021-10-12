@@ -6,7 +6,6 @@ import fr.paris.lutece.plugins.forms.business.CompositeDisplayType;
 import fr.paris.lutece.plugins.forms.business.Control;
 import fr.paris.lutece.plugins.forms.business.ControlType;
 import fr.paris.lutece.plugins.forms.business.FormDisplay;
-import fr.paris.lutece.plugins.forms.business.FormDisplayHome;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateControlHome;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateDisplayHome;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateGroupHome;
@@ -23,7 +22,7 @@ public class TemplateDisplayService extends AbstractFormDisplayService
     @Override
     public void deleteDisplayAndDescendants( int nIdDisplay )
     {
-        FormDisplay formDisplayToDelete = FormDisplayHome.findByPrimaryKey( nIdDisplay );
+        FormDisplay formDisplayToDelete = TemplateDisplayHome.findByPrimaryKey( nIdDisplay );
         if ( formDisplayToDelete == null )
         {
             return;

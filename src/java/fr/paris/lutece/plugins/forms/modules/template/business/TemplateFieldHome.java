@@ -39,6 +39,8 @@ import fr.paris.lutece.plugins.genericattributes.business.Field;
 import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.portal.service.plugin.PluginService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
+import fr.paris.lutece.portal.service.util.AppException;
+import fr.paris.lutece.util.sql.TransactionManager;
 
 /**
  * This class provides instances management methods (create, find, ...) for Field objects
@@ -120,5 +122,35 @@ public final class TemplateFieldHome
     public static List<Field> getFieldListByIdEntry( int nIdEntry )
     {
         return _dao.selectFieldListByIdEntry( nIdEntry, _plugin );
+    }
+    
+    /**
+     * Copy of an instance of field
+     * 
+     * @param field
+     *            The instance of the Field who must copy
+     */
+    public static void copy( Field field )
+    {
+        Field fieldCopy = field;
+        int oldFieldId = field.getIdField( );
+
+        TransactionManager.beginTransaction( _plugin );
+
+        try
+        {
+            create( fieldCopy );
+            Integer idItem = TemplateReferenceItemFieldHome.findIdItemByIdField( oldFieldId );
+            if ( idItem > 0 )
+            {
+                TemplateReferenceItemFieldHome.create( fieldCopy.getIdField( ), idItem );
+            }
+            TransactionManager.commitTransaction( _plugin );
+        }
+        catch( Exception e )
+        {
+            TransactionManager.rollBack( _plugin );
+            throw new AppException( e.getMessage( ), e );
+        }
     }
 }

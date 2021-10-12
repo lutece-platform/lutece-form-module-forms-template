@@ -2,10 +2,12 @@ package fr.paris.lutece.plugins.forms.modules.template.service;
 
 import java.util.List;
 
+import fr.paris.lutece.plugins.forms.business.Control;
 import fr.paris.lutece.plugins.forms.business.FormDisplay;
 import fr.paris.lutece.plugins.forms.business.Group;
 import fr.paris.lutece.plugins.forms.business.Question;
 import fr.paris.lutece.plugins.forms.business.Step;
+import fr.paris.lutece.plugins.forms.modules.template.business.TemplateControlHome;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateDisplayHome;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateEntryHome;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateFieldHome;
@@ -126,5 +128,29 @@ public class TemplateDatabaseService implements IFormDatabaseService
     public void updateFormDisplay( FormDisplay formDisplay )
     {
         TemplateDisplayHome.update( formDisplay );
+    }
+    
+    @Override
+    public Entry copyEntry( Entry entry )
+    {
+        return TemplateEntryHome.copy( entry );
+    }
+    
+    @Override
+    public List<Control> getControlByQuestion( int nIdQuestion )
+    {
+        return TemplateControlHome.getControlByQuestion( nIdQuestion );
+    }
+    
+    @Override
+    public FormDisplay getFormDisplayByFormStepAndComposite( int nIdForm, int nIdStep, int nIdComposite )
+    {
+        return TemplateDisplayHome.getFormDisplayByStepAndComposite( nIdStep, nIdComposite );
+    }
+    
+    @Override
+    public void createControl( Control control )
+    {
+        TemplateControlHome.create( control );
     }
 }

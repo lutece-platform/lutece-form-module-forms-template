@@ -207,7 +207,7 @@ public final class TemplateEntryDAO implements ITemplateEntryDAO
 
         return entry;
     }
-
+    
     /**
      * Return the trim of the title of the entry or null if the entry doesn't have a title
      * 

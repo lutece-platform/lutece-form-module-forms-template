@@ -111,4 +111,17 @@ public interface ITemplateFormDisplayDAO
      * @return the referenceList which contains the data of all the Display objects of group type
      */
     ReferenceList selectGroupDisplayReferenceListByStep( int nIdStep, Plugin plugin );
+    
+    /**
+     * Select the FormDisplay associated to the given parameter
+     * 
+     * @param nIdStep
+     *            The identifier of the Step to match
+     * @param nIdComposite
+     *            The identifier of the Composite to match
+     * @param plugin
+     *            The plugin to use to execute the query
+     * @return the FormDisplay associated to the given parameter
+     */
+    FormDisplay selectFormDisplayByStepAndComposite( int nIdStep, int nIdComposite, Plugin plugin );
 }

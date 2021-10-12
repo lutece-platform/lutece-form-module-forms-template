@@ -60,7 +60,8 @@ public final class TemplateDisplayDAO implements ITemplateFormDisplayDAO
     private static final String SQL_QUERY_SELECTALL_GROUP_DISPLAY_BY_STEP = "SELECT d.id_display, g.title, d.id_template, d.id_composite, d.id_parent, d.display_order, d.composite_type, d.display_depth "
             + "FROM template_display d INNER JOIN template_group g ON d.id_composite = g.id_group "
             + "WHERE d.id_template = ? AND d.composite_type = ? order by d.id_parent, d.display_order";
-
+    private static final String SQL_QUERY_SELECT_BY_FROM_STEP_COMPOSITE = SQL_QUERY_SELECTALL + " WHERE id_template = ? AND id_composite = ?";
+    
     /**
      * {@inheritDoc }
      */
@@ -226,5 +227,24 @@ public final class TemplateDisplayDAO implements ITemplateFormDisplayDAO
         templateDisplay.setDepth( daoUtil.getInt( "display_depth" ) );
 
         return templateDisplay;
+    }
+    
+    @Override
+    public FormDisplay selectFormDisplayByStepAndComposite( int nIdStep, int nIdComposite, Plugin plugin )
+    {
+        FormDisplay formDisplay = null;
+
+        try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECT_BY_FROM_STEP_COMPOSITE, plugin ) )
+        {
+            daoUtil.setInt( 1, nIdStep );
+            daoUtil.setInt( 2, nIdComposite );
+            daoUtil.executeQuery( );
+    
+            if ( daoUtil.next( ) )
+            {
+                formDisplay = dataToObject( daoUtil );
+            }
+        }
+        return formDisplay;
     }
 }

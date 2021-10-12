@@ -33,6 +33,8 @@
  */
 package fr.paris.lutece.plugins.forms.modules.template.business;
 
+import java.util.List;
+
 import fr.paris.lutece.plugins.genericattributes.business.Entry;
 import fr.paris.lutece.plugins.genericattributes.business.Field;
 import fr.paris.lutece.plugins.genericattributes.service.entrytype.IEntryTypeService;
@@ -137,5 +139,55 @@ public final class TemplateEntryHome
         }
 
         return entry;
+    }
+    
+    /**
+     * Copy of an instance of Entry
+     * 
+     * @param entry
+     *            The instance of the Entry who must copy
+     * @return the copied Entry
+     */
+    public static Entry copy( Entry entry )
+    {
+        Entry entryCopy = (Entry) entry.clone( );
+        List<Field> listField = TemplateFieldHome.getFieldListByIdEntry( entry.getIdEntry( ) );
+
+        TransactionManager.beginTransaction( _plugin );
+
+        try
+        {
+            entryCopy.setIdEntry( create( entry ) );
+
+            for ( Field field : listField )
+            {
+                field = TemplateFieldHome.findByPrimaryKey( field.getIdField( ) );
+                field.setParentEntry( entryCopy );
+                TemplateFieldHome.copy( field );
+            }
+
+            if ( Boolean.TRUE.equals( entryCopy.getEntryType( ).getGroup( ) ) )
+            {
+                for ( Entry entryChild : entry.getChildren( ) )
+                {
+                    entryChild = TemplateEntryHome.findByPrimaryKey( entryChild.getIdEntry( ) );
+                    if ( entryChild != null )
+                    {
+                        entryChild.setParent( entryCopy );
+                        entryChild.setIdResource( entryCopy.getIdResource( ) );
+                        entryChild.setResourceType( entryCopy.getResourceType( ) );
+                        copy( entryChild );
+                    }
+                }
+            }
+
+            TransactionManager.commitTransaction( _plugin );
+            return entryCopy;
+        }
+        catch( Exception e )
+        {
+            TransactionManager.rollBack( _plugin );
+            throw new AppException( e.getMessage( ), e );
+        }
     }
 }

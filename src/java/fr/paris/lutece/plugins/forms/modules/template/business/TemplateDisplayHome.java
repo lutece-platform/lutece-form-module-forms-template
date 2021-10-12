@@ -161,4 +161,23 @@ public final class TemplateDisplayHome
             formDisplay.setValidationControlList( listValidationControl );
         }
     }
+    
+    /**
+     * Return the FormDisplay associated to the given parameters
+     * 
+     * @param nIdStep
+     *            The identifier of the Step to match
+     * @param nIdComposite
+     *            The identifier of the Composite to match
+     * @return the formDisplay associated to the given parameters
+     */
+    public static FormDisplay getFormDisplayByStepAndComposite( int nIdStep, int nIdComposite )
+    {
+        FormDisplay formDisplay = _dao.selectFormDisplayByStepAndComposite( nIdStep, nIdComposite, _plugin );
+        if ( formDisplay != null )
+        {
+            initConditionalDisplayForFormDisplay( formDisplay );
+        }
+        return formDisplay;
+    }
 }

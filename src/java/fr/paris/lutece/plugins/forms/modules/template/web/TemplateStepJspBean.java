@@ -557,6 +557,22 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _formDisplay.getStepId( ) );
     }
     
+    @Action( value = ACTION_DUPLICATE_QUESTION )
+    public String doDuplicateQuestion( HttpServletRequest request )
+    {
+        String strReturnUrl = processQuestionDuplication( request );
+
+        if ( strReturnUrl != null )
+        {
+            return redirect( request, strReturnUrl );
+        }
+        else
+        {
+            addInfo( INFO_QUESTION_DUPLICATED, getLocale( ) );
+        }
+        return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _step.getId( ) );
+    }
+    
     @Override
     protected IFormDatabaseService initFormDatabaseService( )
     {

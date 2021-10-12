@@ -70,10 +70,12 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     private static final String VIEW_CREATE_TEMPLATE = "createTemplate";
     private static final String VIEW_MODIFY_TEMPLATE = "manageQuestions";
     private static final String VIEW_CONFIRM_REMOVE_COMPOSITE = "getConfirmRemoveComposite";
+    private static final String VIEW_CONFIRM_REMOVE_TEMPLATE = "getConfirmRemoveTemplate";
 
     // Actions
     private static final String ACTION_CREATE_TEMPLATE = "createTemplate";
-
+    private static final String ACTION_REMOVE_TEMPLATE = "removeTemplate";
+    
     // Properties
     private static final String PROPERTY_ITEM_PER_PAGE = "forms-template.itemsPerPage";
     private static final String PROPERTY_CREATE_GROUP_TITLE = "forms.create_group.title";
@@ -84,9 +86,11 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     // Properties for page titles
     private static final String PROPERTY_PAGE_TITLE_CREATE_TEMPLATE = "module.forms.template.create_template.pageTitle";
 
-    // Infos messages
+    // Messages
     private static final String INFO_TEMPLATE_CREATED = "module.forms.template.info.template.created";
-
+    private static final String WARNING_CONFIRM_REMOVE_QUESTION = "module.forms.template.warning.deleteTemplate";
+    private static final String INFO_DELETE_TEMPLATE_SUCCESSFUL = "module.forms.template.info.deleteTemplate.successful";
+    
     private ITemplateService _templateService = SpringContextService.getBean( TemplateService.BEAN_NAME );
     
     /**
@@ -118,6 +122,63 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         HtmlTemplate templateList = AppTemplateService.getTemplate( TEMPLATE_MANAGE_TEMPLATES_STEP, getLocale( ), model );
 
         return getAdminPage( templateList.getHtml( ) );
+    }
+    
+    /**
+     * Gets the confirmation page of template deletion
+     * 
+     * @param request
+     *            The HTTP request
+     * @return the confirmation page of delete entry
+     */
+    @View( value = VIEW_CONFIRM_REMOVE_TEMPLATE )
+    public String getConfirmRemoveTemplate( HttpServletRequest request )
+    {
+
+        int nIdStep = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE );
+        if ( _step == null || nIdStep != FormsConstants.DEFAULT_ID_VALUE && nIdStep != _step.getId( ) )
+        {
+            _step = TemplateStepHome.findByPrimaryKey( nIdStep );
+        }
+
+        if ( _step == null )
+        {
+            return redirectView( request, VIEW_MANAGE_TEMPLATES );
+        }
+
+        UrlItem url = new UrlItem( getActionUrl( ACTION_REMOVE_TEMPLATE ) );
+        url.addParameter( FormsConstants.PARAMETER_ID_STEP, nIdStep );
+
+        String strMessageUrl = AdminMessageService.getMessageUrl( request, WARNING_CONFIRM_REMOVE_QUESTION, url.getUrl( ), AdminMessage.TYPE_CONFIRMATION );
+        return redirect( request, strMessageUrl );
+    }
+    
+    /**
+     * Perform the template suppression
+     * 
+     * @param request
+     *            The HTTP request
+     * @return The URL to go after performing the action
+     */
+    @Action( ACTION_REMOVE_TEMPLATE )
+    public String doRemoveTemplate( HttpServletRequest request )
+    {
+
+        int nIdStep = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE );
+        if ( _step == null || nIdStep != FormsConstants.DEFAULT_ID_VALUE && nIdStep != _step.getId( ) )
+        {
+            _step = TemplateStepHome.findByPrimaryKey( nIdStep );
+        }
+
+        if ( _step == null )
+        {
+            return redirectView( request, VIEW_MANAGE_TEMPLATES );
+        }
+        
+        _templateService.deleteTemplate( nIdStep );
+        addInfo( INFO_DELETE_TEMPLATE_SUCCESSFUL, getLocale( ) );
+        
+        return redirectView( request, VIEW_MANAGE_TEMPLATES );
     }
 
     /**

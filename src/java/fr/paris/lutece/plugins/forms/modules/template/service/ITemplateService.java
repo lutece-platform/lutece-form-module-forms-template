@@ -26,4 +26,13 @@ public interface ITemplateService
      * @return the right composite
      */
     ICompositeDisplay templateDisplayToComposite( FormDisplay templateDisplay, int nIterationNumber );
+    
+    /**
+     * Remove a given template and the all its formDisplays. The responses, group/question associated to the displays will be deleted. All the descendants of the
+     * displays will also be removed
+     * 
+     * @param nIdTemplate
+     *            The Template Id
+     */
+    void deleteTemplate( int nIdTemplate );
 }

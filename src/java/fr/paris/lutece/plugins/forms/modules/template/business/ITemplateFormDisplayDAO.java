@@ -124,4 +124,13 @@ public interface ITemplateFormDisplayDAO
      * @return the FormDisplay associated to the given parameter
      */
     FormDisplay selectFormDisplayByStepAndComposite( int nIdStep, int nIdComposite, Plugin plugin );
+    
+    /**
+     * Return the FormDisplay associated to the given parameters
+     * 
+     * @param nIdTemplate
+     *            The identifier of the template to match
+     * @return the formDisplay associated to the given parameters
+     */
+    List<FormDisplay> selectFormDisplayListByTemplate( int nIdTemplate, Plugin plugin );
 }

@@ -17,6 +17,7 @@
                             <@td>${template.description}</@td>
                             <@td>
                             	<@aButton href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=manageQuestions&id_step=${template.id}' title='#i18n{forms.action.modify.name}' hideTitle=['all'] color='primary' buttonIcon='edit' size='sm' />
+                            	<@aButton href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?action=doExportJson&id_step=${template.id}' title='#i18n{forms.manage_steps.action.exportStep} ${template.title}' hideTitle=['all'] buttonIcon='download' size='sm' />
                             	<@aButton href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=getConfirmRemoveTemplate&id_step=${template.id}' title='#i18n{forms.action.modify.name}' hideTitle=['all'] color='danger' buttonIcon='trash' size='sm' />
                             </@td>
                        	</@tr>

@@ -180,4 +180,16 @@ public final class TemplateDisplayHome
         }
         return formDisplay;
     }
+    
+    /**
+     * Return the FormDisplay associated to the given parameters
+     * 
+     * @param nIdTemplate
+     *            The identifier of the template to match
+     * @return the formDisplay associated to the given parameters
+     */
+    public static List<FormDisplay> getFormDisplayByTemplate( int nIdTemplate )
+    {
+        return _dao.selectFormDisplayListByTemplate( nIdTemplate, _plugin );
+    }
 }

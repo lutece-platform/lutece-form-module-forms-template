@@ -34,6 +34,9 @@
 package fr.paris.lutece.plugins.forms.modules.template.business;
 
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import fr.paris.lutece.plugins.forms.business.Group;
 import fr.paris.lutece.portal.service.plugin.Plugin;
@@ -138,6 +141,32 @@ public final class TemplateGroupDAO implements ITemplateGroupDAO
 
             daoUtil.executeUpdate( );
         }
+    }
+    
+    @Override
+    public List<Group> selectGroupsListByListIdStep( List<Integer> idSteplist, Plugin plugin )
+    {
+        List<Group> groupList = new ArrayList<>( );
+
+        String query = SQL_QUERY_SELECTALL + " WHERE id_template IN ( ";
+        query += idSteplist.stream( ).map( i -> "?" ).collect( Collectors.joining( "," ) );
+        query += " )";
+
+        try ( DAOUtil daoUtil = new DAOUtil( query, plugin ) )
+        {
+            int index = 0;
+            for ( Integer id : idSteplist )
+            {
+                daoUtil.setInt( ++index, id );
+            }
+            daoUtil.executeQuery( );
+
+            while ( daoUtil.next( ) )
+            {
+                groupList.add( dataToObject( daoUtil ) );
+            }
+        }
+        return groupList;
     }
 
     /**

@@ -9,6 +9,8 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import fr.paris.lutece.plugins.forms.business.CompositeDisplayType;
 import fr.paris.lutece.plugins.forms.business.Form;
 import fr.paris.lutece.plugins.forms.business.FormDisplay;
@@ -20,6 +22,7 @@ import fr.paris.lutece.plugins.forms.modules.template.service.ITemplateService;
 import fr.paris.lutece.plugins.forms.modules.template.service.TemplateDatabaseService;
 import fr.paris.lutece.plugins.forms.modules.template.service.TemplateDisplayService;
 import fr.paris.lutece.plugins.forms.modules.template.service.TemplateService;
+import fr.paris.lutece.plugins.forms.modules.template.service.json.TemplateJsonService;
 import fr.paris.lutece.plugins.forms.service.IFormDatabaseService;
 import fr.paris.lutece.plugins.forms.service.IFormDisplayService;
 import fr.paris.lutece.plugins.forms.util.FormsConstants;
@@ -40,6 +43,7 @@ import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.Action;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.View;
 import fr.paris.lutece.portal.web.util.LocalizedPaginator;
+import fr.paris.lutece.util.file.FileUtil;
 import fr.paris.lutece.util.html.AbstractPaginator;
 import fr.paris.lutece.util.html.HtmlTemplate;
 import fr.paris.lutece.util.url.UrlItem;
@@ -75,6 +79,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     // Actions
     private static final String ACTION_CREATE_TEMPLATE = "createTemplate";
     private static final String ACTION_REMOVE_TEMPLATE = "removeTemplate";
+    private static final String ACTION_EXPORT_FORM = "doExportJson";
     
     // Properties
     private static final String PROPERTY_ITEM_PER_PAGE = "forms-template.itemsPerPage";
@@ -87,6 +92,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     private static final String PROPERTY_PAGE_TITLE_CREATE_TEMPLATE = "module.forms.template.create_template.pageTitle";
 
     // Messages
+    private static final String ERROR_STEP_NOT_COPIED = "forms.error.step.not.copied";
     private static final String INFO_TEMPLATE_CREATED = "module.forms.template.info.template.created";
     private static final String WARNING_CONFIRM_REMOVE_QUESTION = "module.forms.template.warning.deleteTemplate";
     private static final String INFO_DELETE_TEMPLATE_SUCCESSFUL = "module.forms.template.info.deleteTemplate.successful";
@@ -632,6 +638,30 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
             addInfo( INFO_QUESTION_DUPLICATED, getLocale( ) );
         }
         return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _step.getId( ) );
+    }
+    
+    @Action( ACTION_EXPORT_FORM )
+    public void doExportJson( HttpServletRequest request )
+    {
+        int nId = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE );
+
+        if ( nId == FormsConstants.DEFAULT_ID_VALUE )
+        {
+            addError( ERROR_STEP_NOT_COPIED, getLocale( ) );
+            return;
+        }
+
+        try
+        {
+            String content = TemplateJsonService.getInstance( ).jsonExportStep( -1, nId );
+            Step step = TemplateStepHome.findByPrimaryKey( nId );
+            download( content.getBytes( ), FileUtil.normalizeFileName( step.getTitle( ) ) + ".json", "application/json" );
+        }
+        catch( JsonProcessingException e )
+        {
+            AppLogService.error( e.getMessage( ) );
+            addError( ERROR_STEP_NOT_COPIED, getLocale( ) );
+        }
     }
     
     @Override

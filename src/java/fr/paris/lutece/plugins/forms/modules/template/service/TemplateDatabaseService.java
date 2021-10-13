@@ -3,6 +3,7 @@ package fr.paris.lutece.plugins.forms.modules.template.service;
 import java.util.List;
 
 import fr.paris.lutece.plugins.forms.business.Control;
+import fr.paris.lutece.plugins.forms.business.ControlMapping;
 import fr.paris.lutece.plugins.forms.business.FormDisplay;
 import fr.paris.lutece.plugins.forms.business.Group;
 import fr.paris.lutece.plugins.forms.business.Question;
@@ -13,6 +14,7 @@ import fr.paris.lutece.plugins.forms.modules.template.business.TemplateEntryHome
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateFieldHome;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateGroupHome;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateQuestionHome;
+import fr.paris.lutece.plugins.forms.modules.template.business.TemplateReferenceItemFieldHome;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateStepHome;
 import fr.paris.lutece.plugins.forms.service.IFormDatabaseService;
 import fr.paris.lutece.plugins.genericattributes.business.Entry;
@@ -152,5 +154,29 @@ public class TemplateDatabaseService implements IFormDatabaseService
     public void createControl( Control control )
     {
         TemplateControlHome.create( control );
+    }
+    
+    @Override
+    public List<Group> getGroupsListByIdStepList( List<Integer> idStepList )
+    {
+        return TemplateGroupHome.getGroupsListByIdStepList( idStepList );
+    }
+    
+    @Override
+    public List<Question> getQuestionsListByStep( int nIdStep )
+    {
+        return TemplateQuestionHome.getQuestionsListByStep( nIdStep );
+    }
+    
+    @Override
+    public Integer findIdReferenceItemByIdField( int idField )
+    {
+        return TemplateReferenceItemFieldHome.findIdItemByIdField( idField );
+    }
+    
+    @Override
+    public List<ControlMapping> getControlMappingListByIdControl( int nIdControl )
+    {
+        return TemplateControlHome.getControlMappingListByIdControl( nIdControl );
     }
 }

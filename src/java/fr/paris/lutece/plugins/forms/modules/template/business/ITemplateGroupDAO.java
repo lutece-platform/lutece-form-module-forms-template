@@ -33,6 +33,8 @@
  */
 package fr.paris.lutece.plugins.forms.modules.template.business;
 
+import java.util.List;
+
 import fr.paris.lutece.plugins.forms.business.Group;
 import fr.paris.lutece.portal.service.plugin.Plugin;
 
@@ -84,4 +86,13 @@ public interface ITemplateGroupDAO
      * @return The instance of the group
      */
     Group load( int nKey, Plugin plugin );
+    
+    /**
+     * Load the data of all the group objects and returns them as a list
+     * 
+     * @param plugin
+     *            the Plugin
+     * @return The list which contains the data of all the group objects
+     */
+    List<Group> selectGroupsListByListIdStep( List<Integer> idSteplist, Plugin plugin );
 }

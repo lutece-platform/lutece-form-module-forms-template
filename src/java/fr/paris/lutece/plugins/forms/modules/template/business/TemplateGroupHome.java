@@ -33,6 +33,8 @@
  */
 package fr.paris.lutece.plugins.forms.modules.template.business;
 
+import java.util.List;
+
 import fr.paris.lutece.plugins.forms.business.Group;
 import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.portal.service.plugin.PluginService;
@@ -97,5 +99,16 @@ public final class TemplateGroupHome
     public static Group findByPrimaryKey( int nKey )
     {
         return _dao.load( nKey, _plugin );
+    }
+    
+    /**
+     * Load the data of all the group objects and returns them as a list
+     * 
+     * @param idStepList
+     * @return the list which contains the data of all the group objects
+     */
+    public static List<Group> getGroupsListByIdStepList( List<Integer> idStepList )
+    {
+        return _dao.selectGroupsListByListIdStep( idStepList, _plugin );
     }
 }

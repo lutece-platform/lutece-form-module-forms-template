@@ -179,4 +179,16 @@ public class TemplateDatabaseService implements IFormDatabaseService
     {
         return TemplateControlHome.getControlMappingListByIdControl( nIdControl );
     }
+    
+    @Override
+    public void createStep( Step step )
+    {
+        TemplateStepHome.create( step );
+    }
+    
+    @Override
+    public void createMappingControl( int nIdcontrol, int nIdQuestion, String strValue )
+    {
+        TemplateControlHome.createMappingControl( nIdcontrol, nIdQuestion, strValue );
+    }
 }

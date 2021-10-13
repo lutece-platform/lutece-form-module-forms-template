@@ -3,6 +3,7 @@
 		<@box color='primary'>
 			<@boxHeader title='#i18n{module.forms.template.manageTemplates.title}' class='is-align-items-center' boxTools=true>
                 <@aButton href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=createTemplate' buttonIcon='plus' title='#i18n{module.forms.template.manageTemplates.buttonAdd}' hideTitle=['xs','sm'] class='card-header-icon' color='secondary' />
+                <@aButton title='#i18n{forms.manage_steps.buttonImport}' buttonIcon='upload' size='sm' params='data-toggle="modal" data-target="#importJsonModal" ' hideTitle=['xs','sm'] />
             </@boxHeader>
             <@boxBody>
             	<@table>
@@ -29,3 +30,17 @@
     </@columns>
 </@row>
 <@toastr infos=infos warnings=warnings errors=errors />
+<@modal id='importJsonModal'>
+	<@modalHeader modalTitle='#i18n{forms.manage_steps.buttonImport}' />
+	<@modalBody>
+		<@tform class='form' method='post' name='upload_form' action='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp' params='enctype="multipart/form-data"'>
+			<@formGroup labelKey='#i18n{forms.manageForm.labelImportFile}' helpKey='#i18n{forms.manageForm.labelImportFile.help}' rows=2>
+				<@input type='file' name='json_file'/>
+			</@formGroup>
+			<@formGroup>
+				<@button type='submit' name='action_doImportJson' buttonIcon='check' title='#i18n{portal.admin.message.buttonValidate}' />
+				<@button type='cancel' name='action_doCancelImport' buttonIcon='times' title='#i18n{portal.admin.message.buttonCancel}' cancel=true />
+			</@formGroup>
+		</@tform>
+	</@modalBody>
+</@modal>

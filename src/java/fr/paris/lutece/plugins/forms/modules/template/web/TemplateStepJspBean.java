@@ -5,6 +5,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -42,6 +43,7 @@ import fr.paris.lutece.portal.service.util.AppPropertiesService;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.Action;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.View;
+import fr.paris.lutece.portal.web.upload.MultipartHttpServletRequest;
 import fr.paris.lutece.portal.web.util.LocalizedPaginator;
 import fr.paris.lutece.util.file.FileUtil;
 import fr.paris.lutece.util.html.AbstractPaginator;
@@ -80,6 +82,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     private static final String ACTION_CREATE_TEMPLATE = "createTemplate";
     private static final String ACTION_REMOVE_TEMPLATE = "removeTemplate";
     private static final String ACTION_EXPORT_FORM = "doExportJson";
+    private static final String ACTION_IMPORT_STEP = "doImportJson";
     
     // Properties
     private static final String PROPERTY_ITEM_PER_PAGE = "forms-template.itemsPerPage";
@@ -87,15 +90,18 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     
     // Parameters
     private static final String PARAMETER_PAGE_INDEX = "page_index";
+    private static final String PARAMETER_JSON_FILE = "json_file";
 
     // Properties for page titles
     private static final String PROPERTY_PAGE_TITLE_CREATE_TEMPLATE = "module.forms.template.create_template.pageTitle";
 
     // Messages
+    private static final String ERROR_STEP_NOT_IMPORTED = "forms.error.step.not.imported";
     private static final String ERROR_STEP_NOT_COPIED = "forms.error.step.not.copied";
     private static final String INFO_TEMPLATE_CREATED = "module.forms.template.info.template.created";
     private static final String WARNING_CONFIRM_REMOVE_QUESTION = "module.forms.template.warning.deleteTemplate";
     private static final String INFO_DELETE_TEMPLATE_SUCCESSFUL = "module.forms.template.info.deleteTemplate.successful";
+    private static final String INFO_STEP_CREATED = "forms.info.step.created";
     
     private ITemplateService _templateService = SpringContextService.getBean( TemplateService.BEAN_NAME );
     
@@ -662,6 +668,25 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
             AppLogService.error( e.getMessage( ) );
             addError( ERROR_STEP_NOT_COPIED, getLocale( ) );
         }
+    }
+    
+    @Action( ACTION_IMPORT_STEP )
+    public String doImportJson( HttpServletRequest request )
+    {
+        MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
+        FileItem fileItem = multipartRequest.getFile( PARAMETER_JSON_FILE );
+
+        try
+        {
+            TemplateJsonService.getInstance( ).jsonImportStep( 0, new String( fileItem.get( ) ), getLocale( ) );
+            addInfo( INFO_STEP_CREATED, getLocale( ) );
+        }
+        catch( JsonProcessingException e )
+        {
+            AppLogService.error( e.getMessage( ) );
+            addError( ERROR_STEP_NOT_IMPORTED, getLocale( ) );
+        }
+        return redirectView( request, VIEW_MANAGE_TEMPLATES );
     }
     
     @Override

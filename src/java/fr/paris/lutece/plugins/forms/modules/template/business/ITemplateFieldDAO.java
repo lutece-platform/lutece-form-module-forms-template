@@ -98,4 +98,13 @@ public interface ITemplateFieldDAO
      * @return the list of field
      */
     List<Field> selectFieldListByIdEntry( int idEntry, Plugin plugin );
+
+    /**
+     * Load all Fields by code
+     * 
+     * @param code
+     * @param plugin
+     * @return
+     */
+    List<Field> loadByCode( String code, Plugin plugin );
 }

@@ -18,4 +18,6 @@
     <bean id="forms-template.templateService" class="fr.paris.lutece.plugins.forms.modules.template.service.TemplateService" />
     <bean id="forms-template.templateDisplayService" class="fr.paris.lutece.plugins.forms.modules.template.service.TemplateDisplayService" />
     <bean id="forms-template.templateDatabaseService" class="fr.paris.lutece.plugins.forms.modules.template.service.TemplateDatabaseService" />
+    
+    <bean id="forms-template.templateReferenceItemListener" class="fr.paris.lutece.plugins.forms.modules.template.service.TemplateReferenceItemListener" />
 </beans>

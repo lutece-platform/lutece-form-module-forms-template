@@ -52,6 +52,7 @@ public final class TemplateFieldDAO implements ITemplateFieldDAO
     private static final String SQL_QUERY_SELECT_ALL = "SELECT id_field,id_entry,code,title,value,default_value,pos,value_type_date,no_display_title,comment"
             + " FROM template_field ";
     private static final String SQL_QUERY_FIND_BY_PRIMARY_KEY = SQL_QUERY_SELECT_ALL + " WHERE id_field = ? ORDER BY pos";
+    private static final String SQL_QUERY_FIND_BY_CODE = SQL_QUERY_SELECT_ALL + " WHERE code = ?";
     private static final String SQL_QUERY_INSERT = "INSERT INTO template_field (id_entry,code,title,value,default_value,pos,value_type_date,no_display_title,comment)"
             + " VALUES(?,?,?,?,?,?,?,?,?)";
     private static final String SQL_QUERY_DELETE = "DELETE FROM template_field WHERE id_field = ? ";
@@ -174,9 +175,6 @@ public final class TemplateFieldDAO implements ITemplateFieldDAO
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public List<Field> selectFieldListByIdEntry( int nIdEntry, Plugin plugin )
     {
@@ -194,6 +192,24 @@ public final class TemplateFieldDAO implements ITemplateFieldDAO
             }
         }
         return fieldList;
+    }
+
+    @Override
+    public List<Field> loadByCode( String code, Plugin plugin )
+    {
+        List<Field> result = new ArrayList<>( );
+        try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_FIND_BY_CODE, plugin ) )
+        {
+            daoUtil.setString( 1, code );
+            daoUtil.executeQuery( );
+
+            while ( daoUtil.next( ) )
+            {
+                result.add( dataToObject( daoUtil ) );
+            }
+
+        }
+        return result;
     }
 
     private Field dataToObject( DAOUtil daoUtil )

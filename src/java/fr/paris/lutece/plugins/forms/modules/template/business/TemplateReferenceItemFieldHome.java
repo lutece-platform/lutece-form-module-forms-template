@@ -33,6 +33,8 @@
  */
 package fr.paris.lutece.plugins.forms.modules.template.business;
 
+import java.util.List;
+
 import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.portal.service.plugin.PluginService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
@@ -91,5 +93,16 @@ public class TemplateReferenceItemFieldHome
     public static Integer findIdItemByIdField( int idField )
     {
         return _dao.loadItemByField( idField, _plugin );
+    }
+
+    /**
+     * Loads records form the database.
+     * 
+     * @param idItem
+     * @return
+     */
+    public static List<Integer> findIdFieldByIdItem( int idItem )
+    {
+        return _dao.loadFieldByItem( idItem, _plugin );
     }
 }

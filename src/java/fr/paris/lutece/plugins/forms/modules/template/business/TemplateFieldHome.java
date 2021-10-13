@@ -123,7 +123,7 @@ public final class TemplateFieldHome
     {
         return _dao.selectFieldListByIdEntry( nIdEntry, _plugin );
     }
-    
+
     /**
      * Copy of an instance of field
      * 
@@ -152,5 +152,16 @@ public final class TemplateFieldHome
             TransactionManager.rollBack( _plugin );
             throw new AppException( e.getMessage( ), e );
         }
+    }
+
+    /**
+     * Load the data of all the field by code
+     * 
+     * @param code
+     * @return the list of field
+     */
+    public static List<Field> getFieldListByCode( String code )
+    {
+        return _dao.loadByCode( code, _plugin );
     }
 }

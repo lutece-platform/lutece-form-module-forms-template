@@ -33,6 +33,9 @@
  */
 package fr.paris.lutece.plugins.forms.modules.template.business;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.util.sql.DAOUtil;
 
@@ -47,6 +50,7 @@ public class TemplateReferenceItemFieldDao implements ITemplateReferenceItemFiel
     private static final String SQL_QUERY_DELETE_BY_ITEM = "DELETE FROM template_referenceitem_field WHERE id_item = ? ";
     private static final String SQL_QUERY_DELETE_BY_FIELD = "DELETE FROM template_referenceitem_field WHERE id_field = ? ";
     private static final String SQL_QUERY_SELECT_ITEM_BY_FIELD = "SELECT id_item FROM template_referenceitem_field WHERE id_field = ? ";
+    private static final String SQL_QUERY_SELECT_FIELD_BY_ITEM = "SELECT id_field FROM template_referenceitem_field WHERE id_item = ? ";
 
     @Override
     public void insert( int idField, int idReferenceItem, Plugin plugin )
@@ -98,5 +102,23 @@ public class TemplateReferenceItemFieldDao implements ITemplateReferenceItemFiel
         }
 
         return idItem;
+    }
+
+    @Override
+    public List<Integer> loadFieldByItem( int idReferenceItem, Plugin plugin )
+    {
+        List<Integer> list = new ArrayList<>( );
+        try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECT_FIELD_BY_ITEM, plugin ) )
+        {
+            daoUtil.setInt( 1, idReferenceItem );
+
+            daoUtil.executeQuery( );
+            while ( daoUtil.next( ) )
+            {
+                list.add( daoUtil.getInt( 1 ) );
+            }
+        }
+
+        return list;
     }
 }

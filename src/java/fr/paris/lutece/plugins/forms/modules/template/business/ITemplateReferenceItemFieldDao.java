@@ -33,6 +33,8 @@
  */
 package fr.paris.lutece.plugins.forms.modules.template.business;
 
+import java.util.List;
+
 import fr.paris.lutece.plugins.referencelist.business.ReferenceItem;
 import fr.paris.lutece.portal.service.plugin.Plugin;
 
@@ -85,4 +87,14 @@ public interface ITemplateReferenceItemFieldDao
      *            the plugin
      */
     Integer loadItemByField( int idField, Plugin plugin );
+
+    /**
+     * load records from the table.
+     * 
+     * @param idReferenceItem
+     *            the id of the {@link ReferenceItem}
+     * @param plugin
+     *            the plugin
+     */
+    List<Integer> loadFieldByItem( int idReferenceItem, Plugin plugin );
 }

@@ -139,6 +139,7 @@ public final class TemplateDisplayHome
     {
         return _dao.selectGroupDisplayReferenceListByStep( nIdTemplate, _plugin );
     }
+
     /**
      * Inits the Conditional display for a given form display
      * 
@@ -154,14 +155,15 @@ public final class TemplateDisplayHome
             formDisplay.setDisplayControl( listDisplayControl.get( 0 ) );
         }
 
-        List<Control> listValidationControl = TemplateControlHome.getControlByQuestionAndType( formDisplay.getCompositeId( ), ControlType.VALIDATION.getLabel( ) );
+        List<Control> listValidationControl = TemplateControlHome.getControlByQuestionAndType( formDisplay.getCompositeId( ),
+                ControlType.VALIDATION.getLabel( ) );
 
         if ( !listValidationControl.isEmpty( ) )
         {
             formDisplay.setValidationControlList( listValidationControl );
         }
     }
-    
+
     /**
      * Return the FormDisplay associated to the given parameters
      * 
@@ -180,7 +182,7 @@ public final class TemplateDisplayHome
         }
         return formDisplay;
     }
-    
+
     /**
      * Return the FormDisplay associated to the given parameters
      * 

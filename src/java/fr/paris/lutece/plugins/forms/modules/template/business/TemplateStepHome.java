@@ -101,9 +101,10 @@ public final class TemplateStepHome
     {
         return _dao.load( nKey, _plugin );
     }
-    
+
     /**
      * Loads all templates
+     * 
      * @return
      */
     public static List<Step> getAllTemplates( )
@@ -111,4 +112,3 @@ public final class TemplateStepHome
         return _dao.findAll( _plugin );
     }
 }
-

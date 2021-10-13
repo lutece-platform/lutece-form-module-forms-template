@@ -81,7 +81,7 @@ public final class TemplateControlDAO implements ITemplateControlDAO
     @Override
     public void insert( Control control, Plugin plugin )
     {
-        try( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_INSERT, Statement.RETURN_GENERATED_KEYS, plugin ) )
+        try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_INSERT, Statement.RETURN_GENERATED_KEYS, plugin ) )
         {
             int nIndex = 1;
             daoUtil.setString( nIndex++, control.getValue( ) );
@@ -109,7 +109,7 @@ public final class TemplateControlDAO implements ITemplateControlDAO
             int nIndex = 1;
             daoUtil.setInt( nIndex++, nIdControl );
             daoUtil.setInt( nIndex, nIdQuestion );
-    
+
             daoUtil.executeUpdate( );
         }
     }
@@ -126,7 +126,7 @@ public final class TemplateControlDAO implements ITemplateControlDAO
             daoUtil.setInt( nIndex++, nIdControl );
             daoUtil.setInt( nIndex++, nIdQuestion );
             daoUtil.setString( nIndex, strValue );
-    
+
             daoUtil.executeUpdate( );
         }
     }
@@ -138,11 +138,11 @@ public final class TemplateControlDAO implements ITemplateControlDAO
     public Control load( int nKey, Plugin plugin )
     {
         Control control = null;
-        try( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECT, plugin ) )
+        try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECT, plugin ) )
         {
             daoUtil.setInt( 1, nKey );
             daoUtil.executeQuery( );
-           
+
             if ( daoUtil.next( ) )
             {
                 control = dataToObject( daoUtil );
@@ -162,7 +162,7 @@ public final class TemplateControlDAO implements ITemplateControlDAO
         {
             daoUtil.setInt( 1, nIdControl );
             daoUtil.executeQuery( );
-    
+
             while ( daoUtil.next( ) )
             {
                 listQuestion.add( daoUtil.getInt( "id_question" ) );
@@ -177,11 +177,11 @@ public final class TemplateControlDAO implements ITemplateControlDAO
     @Override
     public void delete( int nKey, Plugin plugin )
     {
-       try (  DAOUtil daoUtil = new DAOUtil( SQL_QUERY_DELETE, plugin ) )
-       {
+        try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_DELETE, plugin ) )
+        {
             daoUtil.setInt( 1, nKey );
             daoUtil.executeUpdate( );
-       }
+        }
     }
 
     /**
@@ -233,16 +233,16 @@ public final class TemplateControlDAO implements ITemplateControlDAO
         try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_UPDATE, plugin ) )
         {
             int nIndex = 1;
-    
+
             daoUtil.setInt( nIndex++, control.getId( ) );
             daoUtil.setString( nIndex++, control.getValue( ) );
             daoUtil.setString( nIndex++, control.getErrorMessage( ) );
             daoUtil.setString( nIndex++, control.getValidatorName( ) );
             daoUtil.setString( nIndex++, control.getControlType( ) );
             daoUtil.setInt( nIndex++, control.getIdControlTarget( ) );
-    
+
             daoUtil.setInt( nIndex, control.getId( ) );
-    
+
             daoUtil.executeUpdate( );
         }
     }
@@ -256,7 +256,7 @@ public final class TemplateControlDAO implements ITemplateControlDAO
             daoUtil.setInt( 1, nIdControlTarget );
             daoUtil.setString( 2, controlType.getLabel( ) );
             daoUtil.executeQuery( );
-            
+
             while ( daoUtil.next( ) )
             {
                 listControl.add( dataToObject( daoUtil ) );
@@ -274,7 +274,7 @@ public final class TemplateControlDAO implements ITemplateControlDAO
             daoUtil.setInt( 1, nIdQuestion );
             daoUtil.setString( 2, strControlType );
             daoUtil.executeQuery( );
-            
+
             while ( daoUtil.next( ) )
             {
                 listControl.add( dataToObject( daoUtil ) );
@@ -309,12 +309,12 @@ public final class TemplateControlDAO implements ITemplateControlDAO
     public List<Control> selectControlByQuestion( int nIdQuestion, Plugin plugin )
     {
         List<Control> controlList = new ArrayList<>( );
-        
+
         try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECT_BY_QUESTION, plugin ) )
         {
             daoUtil.setInt( 1, nIdQuestion );
             daoUtil.executeQuery( );
-    
+
             while ( daoUtil.next( ) )
             {
                 controlList.add( dataToObject( daoUtil ) );

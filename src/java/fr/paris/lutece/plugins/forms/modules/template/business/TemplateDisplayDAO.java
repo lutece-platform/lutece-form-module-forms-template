@@ -62,7 +62,7 @@ public final class TemplateDisplayDAO implements ITemplateFormDisplayDAO
             + "WHERE d.id_template = ? AND d.composite_type = ? order by d.id_parent, d.display_order";
     private static final String SQL_QUERY_SELECT_BY_FROM_STEP_COMPOSITE = SQL_QUERY_SELECTALL + " WHERE id_template = ? AND id_composite = ?";
     private static final String SQL_QUERY_SELECT_BY_STEP_COMPOSITE = SQL_QUERY_SELECTALL + " WHERE id_template = ? ";
-    
+
     /**
      * {@inheritDoc }
      */
@@ -99,7 +99,7 @@ public final class TemplateDisplayDAO implements ITemplateFormDisplayDAO
         {
             daoUtil.setInt( 1, nKey );
             daoUtil.executeQuery( );
-    
+
             if ( daoUtil.next( ) )
             {
                 templateDisplay = dataToObject( daoUtil );
@@ -120,7 +120,7 @@ public final class TemplateDisplayDAO implements ITemplateFormDisplayDAO
             daoUtil.executeUpdate( );
         }
     }
-    
+
     @Override
     public ReferenceList selectGroupDisplayReferenceListByStep( int nIdStep, Plugin plugin )
     {
@@ -130,7 +130,7 @@ public final class TemplateDisplayDAO implements ITemplateFormDisplayDAO
             daoUtil.setInt( 1, nIdStep );
             daoUtil.setString( 2, CompositeDisplayType.GROUP.getLabel( ) );
             daoUtil.executeQuery( );
-    
+
             while ( daoUtil.next( ) )
             {
                 groupList.addItem( daoUtil.getInt( "id_display" ), daoUtil.getString( "title" ) );
@@ -145,7 +145,7 @@ public final class TemplateDisplayDAO implements ITemplateFormDisplayDAO
         try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_UPDATE, plugin ) )
         {
             int nIndex = 1;
-    
+
             daoUtil.setInt( nIndex++, templateDisplay.getId( ) );
             daoUtil.setInt( nIndex++, templateDisplay.getStepId( ) );
             daoUtil.setInt( nIndex++, templateDisplay.getCompositeId( ) );
@@ -165,12 +165,12 @@ public final class TemplateDisplayDAO implements ITemplateFormDisplayDAO
     public List<FormDisplay> selectFormDisplayListByParent( int nIdTemplate, int nIdParent, Plugin plugin )
     {
         List<FormDisplay> templateDisplayList = new ArrayList<>( );
-        try( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECT_BY_PARENT, plugin ) )
+        try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECT_BY_PARENT, plugin ) )
         {
             daoUtil.setInt( 1, nIdTemplate );
             daoUtil.setInt( 2, nIdParent );
             daoUtil.executeQuery( );
-    
+
             while ( daoUtil.next( ) )
             {
                 templateDisplayList.add( dataToObject( daoUtil ) );
@@ -229,7 +229,7 @@ public final class TemplateDisplayDAO implements ITemplateFormDisplayDAO
 
         return templateDisplay;
     }
-    
+
     @Override
     public FormDisplay selectFormDisplayByStepAndComposite( int nIdStep, int nIdComposite, Plugin plugin )
     {
@@ -240,7 +240,7 @@ public final class TemplateDisplayDAO implements ITemplateFormDisplayDAO
             daoUtil.setInt( 1, nIdStep );
             daoUtil.setInt( 2, nIdComposite );
             daoUtil.executeQuery( );
-    
+
             if ( daoUtil.next( ) )
             {
                 formDisplay = dataToObject( daoUtil );
@@ -257,10 +257,11 @@ public final class TemplateDisplayDAO implements ITemplateFormDisplayDAO
         {
             daoUtil.setInt( 1, nIdTemplate );
             daoUtil.executeQuery( );
-    
+
             while ( daoUtil.next( ) )
             {
-                list.add( dataToObject( daoUtil ) );;
+                list.add( dataToObject( daoUtil ) );
+                ;
             }
         }
         return list;

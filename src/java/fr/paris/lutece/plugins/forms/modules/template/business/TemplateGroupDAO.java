@@ -142,7 +142,7 @@ public final class TemplateGroupDAO implements ITemplateGroupDAO
             daoUtil.executeUpdate( );
         }
     }
-    
+
     @Override
     public List<Group> selectGroupsListByListIdStep( List<Integer> idSteplist, Plugin plugin )
     {

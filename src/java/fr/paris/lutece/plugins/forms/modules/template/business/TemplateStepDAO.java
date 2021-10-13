@@ -84,7 +84,7 @@ public final class TemplateStepDAO implements ITemplateStepDAO
         {
             daoUtil.setInt( 1, nKey );
             daoUtil.executeQuery( );
-    
+
             if ( daoUtil.next( ) )
             {
                 step = dataToObject( daoUtil );
@@ -118,9 +118,9 @@ public final class TemplateStepDAO implements ITemplateStepDAO
             daoUtil.setInt( ++nIndex, step.getId( ) );
             daoUtil.setString( ++nIndex, step.getTitle( ) );
             daoUtil.setString( ++nIndex, step.getDescription( ) );
-    
+
             daoUtil.setInt( ++nIndex, step.getId( ) );
-    
+
             daoUtil.executeUpdate( );
         }
     }
@@ -139,6 +139,7 @@ public final class TemplateStepDAO implements ITemplateStepDAO
         }
         return list;
     }
+
     /**
      * 
      * @param daoUtil

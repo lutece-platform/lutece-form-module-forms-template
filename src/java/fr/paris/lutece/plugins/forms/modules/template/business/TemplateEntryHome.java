@@ -140,7 +140,7 @@ public final class TemplateEntryHome
 
         return entry;
     }
-    
+
     /**
      * Copy of an instance of Entry
      * 

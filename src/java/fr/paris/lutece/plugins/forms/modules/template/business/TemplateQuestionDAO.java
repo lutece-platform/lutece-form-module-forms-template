@@ -97,7 +97,6 @@ public final class TemplateQuestionDAO implements ITemplateQuestionDAO
         {
             daoUtil.setInt( 1, nKey );
             daoUtil.executeQuery( );
-            
 
             if ( daoUtil.next( ) )
             {
@@ -146,9 +145,9 @@ public final class TemplateQuestionDAO implements ITemplateQuestionDAO
             daoUtil.setBoolean( ++nIndex, question.isFiltrableMultiviewGlobal( ) );
             daoUtil.setBoolean( ++nIndex, question.isFiltrableMultiviewFormSelected( ) );
             daoUtil.setInt( ++nIndex, question.getMultiviewColumnOrder( ) );
-    
+
             daoUtil.setInt( ++nIndex, question.getId( ) );
-    
+
             daoUtil.executeUpdate( );
         }
     }
@@ -161,7 +160,7 @@ public final class TemplateQuestionDAO implements ITemplateQuestionDAO
         {
             daoUtil.setInt( 1, nIdTemplate );
             daoUtil.executeQuery( );
-    
+
             while ( daoUtil.next( ) )
             {
                 questionList.add( dataToObject( daoUtil ) );

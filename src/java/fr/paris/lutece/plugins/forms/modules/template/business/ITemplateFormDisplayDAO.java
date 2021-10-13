@@ -111,7 +111,7 @@ public interface ITemplateFormDisplayDAO
      * @return the referenceList which contains the data of all the Display objects of group type
      */
     ReferenceList selectGroupDisplayReferenceListByStep( int nIdStep, Plugin plugin );
-    
+
     /**
      * Select the FormDisplay associated to the given parameter
      * 
@@ -124,7 +124,7 @@ public interface ITemplateFormDisplayDAO
      * @return the FormDisplay associated to the given parameter
      */
     FormDisplay selectFormDisplayByStepAndComposite( int nIdStep, int nIdComposite, Plugin plugin );
-    
+
     /**
      * Return the FormDisplay associated to the given parameters
      * 

@@ -86,15 +86,15 @@ public interface ITemplateStepDAO
      * @return The instance of the step
      */
     Step load( int nKey, Plugin plugin );
-    
+
     /**
-    * Load all templates
-    * 
-    * @param nKey
-    *            The identifier of the step
-    * @param plugin
-    *            the Plugin
-    * @return The instance of the step
-    */
+     * Load all templates
+     * 
+     * @param nKey
+     *            The identifier of the step
+     * @param plugin
+     *            the Plugin
+     * @return The instance of the step
+     */
     List<Step> findAll( Plugin plugin );
 }

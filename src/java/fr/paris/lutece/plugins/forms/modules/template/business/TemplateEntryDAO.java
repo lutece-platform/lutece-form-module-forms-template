@@ -50,8 +50,7 @@ public final class TemplateEntryDAO implements ITemplateEntryDAO
     // Constants
     private static final String SQL_QUERY_SELECT_LIST = "ent.id_type,typ.title,typ.is_group,typ.is_comment,typ.class_name,typ.is_mylutece_user,typ.icon_name,"
             + "ent.id_entry,ent.code,ent.title,ent.help_message, ent.comment,ent.mandatory,ent.fields_in_line,"
-            + "ent.pos,ent.field_unique, ent.css_class, ent.pos_conditional, ent.error_message, "
-            + "ent.is_only_display_back, ent.is_indexed ";
+            + "ent.pos,ent.field_unique, ent.css_class, ent.pos_conditional, ent.error_message, " + "ent.is_only_display_back, ent.is_indexed ";
     private static final String SQL_QUERY_SELECT_ENTRY_ATTRIBUTES = "SELECT " + SQL_QUERY_SELECT_LIST
             + "FROM template_entry ent,genatt_entry_type typ WHERE ent.id_type=typ.id_type ";
     private static final String SQL_QUERY_FIND_BY_PRIMARY_KEY = SQL_QUERY_SELECT_ENTRY_ATTRIBUTES + " AND ent.id_entry = ? ";
@@ -207,7 +206,7 @@ public final class TemplateEntryDAO implements ITemplateEntryDAO
 
         return entry;
     }
-    
+
     /**
      * Return the trim of the title of the entry or null if the entry doesn't have a title
      * 

@@ -86,7 +86,7 @@ public interface ITemplateGroupDAO
      * @return The instance of the group
      */
     Group load( int nKey, Plugin plugin );
-    
+
     /**
      * Load the data of all the group objects and returns them as a list
      * 

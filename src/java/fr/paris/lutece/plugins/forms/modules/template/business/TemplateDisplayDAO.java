@@ -261,7 +261,6 @@ public final class TemplateDisplayDAO implements ITemplateFormDisplayDAO
             while ( daoUtil.next( ) )
             {
                 list.add( dataToObject( daoUtil ) );
-                ;
             }
         }
         return list;

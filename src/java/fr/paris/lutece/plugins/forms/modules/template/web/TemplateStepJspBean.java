@@ -181,7 +181,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     {
 
         int nIdStep = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE );
-        if ( _step == null || nIdStep != FormsConstants.DEFAULT_ID_VALUE && nIdStep != _step.getId( ) )
+        if ( _step == null || ( nIdStep != FormsConstants.DEFAULT_ID_VALUE && nIdStep != _step.getId( ) ) )
         {
             _step = TemplateStepHome.findByPrimaryKey( nIdStep );
         }
@@ -210,7 +210,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     {
 
         int nIdStep = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE );
-        if ( _step == null || nIdStep != FormsConstants.DEFAULT_ID_VALUE && nIdStep != _step.getId( ) )
+        if ( _step == null || ( nIdStep != FormsConstants.DEFAULT_ID_VALUE && nIdStep != _step.getId( ) ) )
         {
             _step = TemplateStepHome.findByPrimaryKey( nIdStep );
         }
@@ -515,7 +515,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         String strMessage = StringUtils.EMPTY;
         int nIdStep = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE );
 
-        if ( _step == null || nIdStep != FormsConstants.DEFAULT_ID_VALUE && nIdStep != _step.getId( ) )
+        if ( _step == null || ( nIdStep != FormsConstants.DEFAULT_ID_VALUE && nIdStep != _step.getId( ) ) )
         {
             _step = TemplateStepHome.findByPrimaryKey( nIdStep );
         }

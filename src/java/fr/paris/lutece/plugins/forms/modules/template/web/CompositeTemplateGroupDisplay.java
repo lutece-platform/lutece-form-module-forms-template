@@ -70,7 +70,6 @@ public class CompositeTemplateGroupDisplay implements ICompositeDisplay
     private final FormDisplay _templateDisplay;
     private Group _group;
     private String _strIconName;
-    private int _nIterationNumber;
 
     /**
      * Constructor
@@ -105,9 +104,9 @@ public class CompositeTemplateGroupDisplay implements ICompositeDisplay
 
         List<FormDisplay> listTemplateDisplayChildren = TemplateDisplayHome.getFormDisplayListByParent( _templateDisplay.getStepId( ),
                 _templateDisplay.getId( ) );
-        _nIterationNumber = _group.getIterationMin( ) - 1;
+        int iterationNumber = _group.getIterationMin( ) - 1;
 
-        for ( int i = 0; i <= _nIterationNumber; i++ )
+        for ( int i = 0; i <= iterationNumber; i++ )
         {
             addChildren( listTemplateDisplayChildren, i );
         }

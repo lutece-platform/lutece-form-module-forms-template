@@ -1,12 +1,11 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<plug-in>
+<?xml version="1.0" encoding="UTF-8"?><plug-in>
     <name>forms-template</name>
     <class>fr.paris.lutece.portal.service.plugin.PluginDefaultImplementation</class>
-    <version>1.0.0-SNAPSHOT</version>
-    <documentation></documentation>
-    <installation></installation>
-    <changes></changes>
-    <user-guide></user-guide>
+    <version>1.0.0</version>
+    <documentation/>
+    <installation/>
+    <changes/>
+    <user-guide/>
     <description>module.forms.template.module.description</description>
     <provider>module.forms.template.module.provider</provider>
     <provider-url>https://dev.lutece.paris.fr</provider-url>

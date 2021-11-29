@@ -116,6 +116,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     private static final String ACTION_REMOVE_TEMPLATE = "removeTemplate";
     private static final String ACTION_EXPORT_FORM = "doExportJson";
     private static final String ACTION_IMPORT_STEP = "doImportJson";
+    private static final String ACTION_DUPLICATE_TEMPLATE = "duplicateTemplate";
 
     // Properties
     private static final String PROPERTY_ITEM_PER_PAGE = "forms-template.itemsPerPage";
@@ -718,6 +719,38 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         {
             AppLogService.error( e.getMessage( ) );
             addError( ERROR_STEP_NOT_IMPORTED, getLocale( ) );
+        }
+        return redirectView( request, VIEW_MANAGE_TEMPLATES );
+    }
+    
+    /**
+     * Manages the copy of a template whose identifier is in the http request
+     *
+     * @param request
+     *            The Http request
+     * @return the html code to confirm
+     */
+    @Action( ACTION_DUPLICATE_TEMPLATE )
+    public String doDuplicateTemplate( HttpServletRequest request )
+    {
+        int nId = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE );
+
+        if ( nId == FormsConstants.DEFAULT_ID_VALUE )
+        {
+            addError( ERROR_STEP_NOT_COPIED, getLocale( ) );
+            return redirectView( request, VIEW_MANAGE_TEMPLATES );
+        }
+        
+        try
+        {
+            String content = TemplateJsonService.getInstance( ).jsonExportStep( -1, nId );
+            TemplateJsonService.getInstance( ).jsonImportStep( 0, content, getLocale( ) );
+            addInfo( INFO_TEMPLATE_CREATED, getLocale( ) );
+        }
+        catch( JsonProcessingException e )
+        {
+            AppLogService.error( e.getMessage( ) );
+            addError( ERROR_STEP_NOT_COPIED, getLocale( ) );
         }
         return redirectView( request, VIEW_MANAGE_TEMPLATES );
     }

@@ -130,12 +130,12 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     private static final String PROPERTY_PAGE_TITLE_CREATE_TEMPLATE = "module.forms.template.create_template.pageTitle";
 
     // Messages
-    private static final String ERROR_STEP_NOT_IMPORTED = "forms.error.step.not.imported";
-    private static final String ERROR_STEP_NOT_COPIED = "forms.error.step.not.copied";
+    private static final String ERROR_TEMPLATE_NOT_IMPORTED = "module.forms.template.error.template.not.imported";
+    private static final String ERROR_TEMPLATE_NOT_EXPORTED = "module.forms.template.error.template.not.exported";
+    private static final String ERROR_TEMPLATE_NOT_COPIED = "module.forms.template.error.template.not.copied";
     private static final String INFO_TEMPLATE_CREATED = "module.forms.template.info.template.created";
     private static final String WARNING_CONFIRM_REMOVE_QUESTION = "module.forms.template.warning.deleteTemplate";
     private static final String INFO_DELETE_TEMPLATE_SUCCESSFUL = "module.forms.template.info.deleteTemplate.successful";
-    private static final String INFO_STEP_CREATED = "forms.info.step.created";
 
     private ITemplateService _templateService = SpringContextService.getBean( TemplateService.BEAN_NAME );
 
@@ -687,7 +687,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
 
         if ( nId == FormsConstants.DEFAULT_ID_VALUE )
         {
-            addError( ERROR_STEP_NOT_COPIED, getLocale( ) );
+            addError( ERROR_TEMPLATE_NOT_EXPORTED, getLocale( ) );
             return;
         }
 
@@ -700,7 +700,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         catch( JsonProcessingException e )
         {
             AppLogService.error( e.getMessage( ) );
-            addError( ERROR_STEP_NOT_COPIED, getLocale( ) );
+            addError( ERROR_TEMPLATE_NOT_EXPORTED, getLocale( ) );
         }
     }
 
@@ -713,12 +713,12 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         try
         {
             TemplateJsonService.getInstance( ).jsonImportStep( 0, new String( fileItem.get( ) ), getLocale( ) );
-            addInfo( INFO_STEP_CREATED, getLocale( ) );
+            addInfo( INFO_TEMPLATE_CREATED, getLocale( ) );
         }
         catch( JsonProcessingException e )
         {
             AppLogService.error( e.getMessage( ) );
-            addError( ERROR_STEP_NOT_IMPORTED, getLocale( ) );
+            addError( ERROR_TEMPLATE_NOT_IMPORTED, getLocale( ) );
         }
         return redirectView( request, VIEW_MANAGE_TEMPLATES );
     }
@@ -737,7 +737,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
 
         if ( nId == FormsConstants.DEFAULT_ID_VALUE )
         {
-            addError( ERROR_STEP_NOT_COPIED, getLocale( ) );
+            addError( ERROR_TEMPLATE_NOT_COPIED, getLocale( ) );
             return redirectView( request, VIEW_MANAGE_TEMPLATES );
         }
         
@@ -750,7 +750,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         catch( JsonProcessingException e )
         {
             AppLogService.error( e.getMessage( ) );
-            addError( ERROR_STEP_NOT_COPIED, getLocale( ) );
+            addError( ERROR_TEMPLATE_NOT_COPIED, getLocale( ) );
         }
         return redirectView( request, VIEW_MANAGE_TEMPLATES );
     }

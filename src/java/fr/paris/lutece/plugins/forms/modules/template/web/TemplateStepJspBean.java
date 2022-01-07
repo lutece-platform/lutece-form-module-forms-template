@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2021, City of Paris
+ * Copyright (c) 2002-2022, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -722,7 +722,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         }
         return redirectView( request, VIEW_MANAGE_TEMPLATES );
     }
-    
+
     /**
      * Manages the copy of a template whose identifier is in the http request
      *
@@ -740,7 +740,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
             addError( ERROR_TEMPLATE_NOT_COPIED, getLocale( ) );
             return redirectView( request, VIEW_MANAGE_TEMPLATES );
         }
-        
+
         try
         {
             String content = TemplateJsonService.getInstance( ).jsonExportStep( -1, nId );

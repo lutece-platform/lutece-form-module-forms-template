@@ -2,7 +2,22 @@
 	<@breadcrumbItem class='active is-active'>${step.title}</@breadcrumbItem>
 </@formBreadCrumb>
 <@row>
-    <@columns>
+    <@columns sm=12 md=3>
+    	<@tform action='jsp/admin/plugins/forms/modules/template/DoModifyTemplate.jsp'>
+			<@input type='hidden' id='id_step' name='id_step' value='${step.id}' />
+			<@formGroup labelFor='title' labelKey='#i18n{forms.create_step.labelTitle}' helpKey='#i18n{forms.create_step.labelTitle.help}' mandatory=true>
+	             <@input type='text' name='title' value='${step.title!}' />
+	        </@formGroup>
+	        <@formGroup labelFor='description' labelKey='#i18n{forms.create_step.labelDescription}' helpKey='#i18n{forms.create_step.labelDescription.help}' >
+	             <@input type='textarea' name='description'>${step.description!}</@input>
+	        </@formGroup>
+	        <@formGroup rows=2>
+				<@button type='submit' name='cancel' buttonIcon='times-circle' title='#i18n{portal.util.labelCancel}' cancel=true />
+				<@button type='submit' name='save' buttonIcon='check' title='#i18n{portal.util.labelValidate}' />
+			</@formGroup>
+		</@tform>
+</@columns>
+	<@columns sm=12 md=9>
         <@box>
 			<@boxHeader title='${step.title}' />
             <@boxBody>

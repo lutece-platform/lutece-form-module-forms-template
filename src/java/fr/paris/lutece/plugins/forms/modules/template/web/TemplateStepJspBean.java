@@ -134,7 +134,8 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     // Parameters
     private static final String PARAMETER_PAGE_INDEX = "page_index";
     private static final String PARAMETER_JSON_FILE = "json_file";
-
+    private static final String PARAMETER_CANCEL = "cancel";
+    
     // Properties for page titles
     private static final String PROPERTY_PAGE_TITLE_CREATE_TEMPLATE = "module.forms.template.create_template.pageTitle";
 
@@ -145,7 +146,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     private static final String INFO_TEMPLATE_CREATED = "module.forms.template.info.template.created";
     private static final String WARNING_CONFIRM_REMOVE_QUESTION = "module.forms.template.warning.deleteTemplate";
     private static final String INFO_DELETE_TEMPLATE_SUCCESSFUL = "module.forms.template.info.deleteTemplate.successful";
-
+    
     private ITemplateService _templateService = SpringContextService.getBean( TemplateService.BEAN_NAME );
     protected Template _template;
     
@@ -776,6 +777,31 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
             addError( ERROR_TEMPLATE_NOT_COPIED, getLocale( ) );
         }
         return redirectView( request, VIEW_MANAGE_TEMPLATES );
+    }
+    
+    /**
+     * Perform the template modification
+     * 
+     * @param request
+     *            The HTTP request
+     * @throws AccessDeniedException
+     *             the {@link AccessDeniedException}
+     * @return The URL to go after performing the action
+     */
+    public String doModifyTemplate( HttpServletRequest request ) throws AccessDeniedException
+    {
+        
+        if ( request.getParameter( PARAMETER_CANCEL ) == null )
+        {
+            int nId = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE );
+            _template = TemplateStepHome.findByPrimaryKey( nId );
+            populate( _template, request, request.getLocale( ) );
+            
+            TemplateStepHome.update( _template );
+            return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, nId );
+        }
+        return redirectView( request, VIEW_MANAGE_TEMPLATES );
+        
     }
 
     @Override

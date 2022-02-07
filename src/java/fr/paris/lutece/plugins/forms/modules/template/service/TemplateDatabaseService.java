@@ -41,6 +41,7 @@ import fr.paris.lutece.plugins.forms.business.FormDisplay;
 import fr.paris.lutece.plugins.forms.business.Group;
 import fr.paris.lutece.plugins.forms.business.Question;
 import fr.paris.lutece.plugins.forms.business.Step;
+import fr.paris.lutece.plugins.forms.modules.template.business.Template;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateControlHome;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateDisplayHome;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateEntryHome;
@@ -216,7 +217,10 @@ public class TemplateDatabaseService implements IFormDatabaseService
     @Override
     public void createStep( Step step )
     {
-        TemplateStepHome.create( step );
+        Template template = new Template( );
+        template.setTitle( step.getTitle( ) );
+        template.setDescription( step.getDescription( ) );
+        TemplateStepHome.create( template );
     }
 
     @Override

@@ -35,13 +35,12 @@ package fr.paris.lutece.plugins.forms.modules.template.business;
 
 import java.util.List;
 
-import fr.paris.lutece.plugins.forms.business.Step;
 import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.portal.service.plugin.PluginService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 
 /**
- * This class provides instances management methods (create, find, ...) for Step objects
+ * This class provides instances management methods (create, find, ...) for Template objects
  */
 public final class TemplateStepHome
 {
@@ -56,34 +55,34 @@ public final class TemplateStepHome
     }
 
     /**
-     * Create an instance of the step class
+     * Create an instance of the template class
      * 
-     * @param step
-     *            The instance of the Step which contains the informations to store
-     * @return The instance of step which has been created with its primary key.
+     * @param template
+     *            The instance of the Template which contains the informations to store
+     * @return The instance of template which has been created with its primary key.
      */
-    public static void create( Step step )
+    public static void create( Template template )
     {
-        _dao.insert( step, _plugin );
+        _dao.insert( template, _plugin );
     }
 
     /**
-     * Update of the step which is specified in parameter
+     * Update of the template which is specified in parameter
      * 
-     * @param step
-     *            The instance of the Step which contains the data to store
-     * @return The instance of the step which has been updated
+     * @param template
+     *            The instance of the Template which contains the data to store
+     * @return The instance of the template which has been updated
      */
-    public static void update( Step step )
+    public static void update( Template template )
     {
-        _dao.store( step, _plugin );
+        _dao.store( template, _plugin );
     }
 
     /**
-     * Remove the step whose identifier is specified in parameter
+     * Remove the template whose identifier is specified in parameter
      * 
      * @param nKey
-     *            The step Id
+     *            The template Id
      */
     public static void remove( int nKey )
     {
@@ -91,13 +90,13 @@ public final class TemplateStepHome
     }
 
     /**
-     * Returns an instance of a step whose identifier is specified in parameter
+     * Returns an instance of a template whose identifier is specified in parameter
      * 
      * @param nKey
-     *            The step primary key
-     * @return an instance of Step
+     *            The template primary key
+     * @return an instance of Template
      */
-    public static Step findByPrimaryKey( int nKey )
+    public static Template findByPrimaryKey( int nKey )
     {
         return _dao.load( nKey, _plugin );
     }
@@ -107,7 +106,7 @@ public final class TemplateStepHome
      * 
      * @return
      */
-    public static List<Step> getAllTemplates( )
+    public static List<Template> getAllTemplates( )
     {
         return _dao.findAll( _plugin );
     }

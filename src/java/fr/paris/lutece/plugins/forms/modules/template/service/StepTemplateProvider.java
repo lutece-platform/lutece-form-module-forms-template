@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import fr.paris.lutece.plugins.forms.business.Step;
+import fr.paris.lutece.plugins.forms.modules.template.business.Template;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateStepHome;
 import fr.paris.lutece.plugins.forms.modules.template.service.json.TemplateJsonService;
 import fr.paris.lutece.plugins.forms.service.json.IStepTemplateProvider;
@@ -25,8 +25,8 @@ public class StepTemplateProvider implements IStepTemplateProvider
     public ReferenceList getStepTemplateList( )
     {
         ReferenceList referenceList = new ReferenceList( );
-        List<Step> templateList = TemplateStepHome.getAllTemplates( );
-        for ( Step template : templateList )
+        List<Template> templateList = TemplateStepHome.getAllTemplates( );
+        for ( Template template : templateList )
         {
             referenceList.addItem( template.getId( ), template.getTitle( ) );
         }

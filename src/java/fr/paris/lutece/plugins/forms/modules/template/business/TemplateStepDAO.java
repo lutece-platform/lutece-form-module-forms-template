@@ -37,7 +37,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import fr.paris.lutece.plugins.forms.business.Step;
 import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.util.sql.DAOUtil;
 
@@ -57,18 +56,18 @@ public final class TemplateStepDAO implements ITemplateStepDAO
      * {@inheritDoc }
      */
     @Override
-    public void insert( Step step, Plugin plugin )
+    public void insert( Template template, Plugin plugin )
     {
         try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_INSERT, Statement.RETURN_GENERATED_KEYS, plugin ) )
         {
             int nIndex = 0;
-            daoUtil.setString( ++nIndex, step.getTitle( ) );
-            daoUtil.setString( ++nIndex, step.getDescription( ) );
+            daoUtil.setString( ++nIndex, template.getTitle( ) );
+            daoUtil.setString( ++nIndex, template.getDescription( ) );
 
             daoUtil.executeUpdate( );
             if ( daoUtil.nextGeneratedKey( ) )
             {
-                step.setId( daoUtil.getGeneratedKeyInt( 1 ) );
+                template.setId( daoUtil.getGeneratedKeyInt( 1 ) );
             }
         }
     }
@@ -77,9 +76,9 @@ public final class TemplateStepDAO implements ITemplateStepDAO
      * {@inheritDoc }
      */
     @Override
-    public Step load( int nKey, Plugin plugin )
+    public Template load( int nKey, Plugin plugin )
     {
-        Step step = null;
+        Template template = null;
         try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECT, plugin ) )
         {
             daoUtil.setInt( 1, nKey );
@@ -87,10 +86,10 @@ public final class TemplateStepDAO implements ITemplateStepDAO
 
             if ( daoUtil.next( ) )
             {
-                step = dataToObject( daoUtil );
+                template = dataToObject( daoUtil );
             }
         }
-        return step;
+        return template;
     }
 
     /**
@@ -110,25 +109,25 @@ public final class TemplateStepDAO implements ITemplateStepDAO
      * {@inheritDoc }
      */
     @Override
-    public void store( Step step, Plugin plugin )
+    public void store( Template template, Plugin plugin )
     {
         try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_UPDATE, plugin ) )
         {
             int nIndex = 0;
-            daoUtil.setInt( ++nIndex, step.getId( ) );
-            daoUtil.setString( ++nIndex, step.getTitle( ) );
-            daoUtil.setString( ++nIndex, step.getDescription( ) );
+            daoUtil.setInt( ++nIndex, template.getId( ) );
+            daoUtil.setString( ++nIndex, template.getTitle( ) );
+            daoUtil.setString( ++nIndex, template.getDescription( ) );
 
-            daoUtil.setInt( ++nIndex, step.getId( ) );
+            daoUtil.setInt( ++nIndex, template.getId( ) );
 
             daoUtil.executeUpdate( );
         }
     }
 
     @Override
-    public List<Step> findAll( Plugin plugin )
+    public List<Template> findAll( Plugin plugin )
     {
-        List<Step> list = new ArrayList<>( );
+        List<Template> list = new ArrayList<>( );
         try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_SELECTALL, plugin ) )
         {
             daoUtil.executeQuery( );
@@ -144,16 +143,16 @@ public final class TemplateStepDAO implements ITemplateStepDAO
      * 
      * @param daoUtil
      *            The daoutil
-     * @return The populated Step object
+     * @return The populated Template object
      */
-    private Step dataToObject( DAOUtil daoUtil )
+    private Template dataToObject( DAOUtil daoUtil )
     {
-        Step step = new Step( );
+        Template template = new Template( );
 
-        step.setId( daoUtil.getInt( "id_template" ) );
-        step.setTitle( daoUtil.getString( "title" ) );
-        step.setDescription( daoUtil.getString( "description" ) );
-        return step;
+        template.setId( daoUtil.getInt( "id_template" ) );
+        template.setTitle( daoUtil.getString( "title" ) );
+        template.setDescription( daoUtil.getString( "description" ) );
+        return template;
     }
 
 }

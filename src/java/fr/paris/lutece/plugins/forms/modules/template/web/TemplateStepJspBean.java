@@ -45,11 +45,13 @@ import org.apache.commons.lang3.math.NumberUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import fr.paris.lutece.api.user.User;
 import fr.paris.lutece.plugins.forms.business.CompositeDisplayType;
 import fr.paris.lutece.plugins.forms.business.Form;
 import fr.paris.lutece.plugins.forms.business.FormDisplay;
 import fr.paris.lutece.plugins.forms.business.FormDisplayHome;
 import fr.paris.lutece.plugins.forms.business.Step;
+import fr.paris.lutece.plugins.forms.modules.template.business.Template;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateDisplayHome;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateStepHome;
 import fr.paris.lutece.plugins.forms.modules.template.service.ITemplateService;
@@ -57,6 +59,8 @@ import fr.paris.lutece.plugins.forms.modules.template.service.TemplateDatabaseSe
 import fr.paris.lutece.plugins.forms.modules.template.service.TemplateDisplayService;
 import fr.paris.lutece.plugins.forms.modules.template.service.TemplateService;
 import fr.paris.lutece.plugins.forms.modules.template.service.json.TemplateJsonService;
+import fr.paris.lutece.plugins.forms.modules.template.service.rbac.TemplateRbacAction;
+import fr.paris.lutece.plugins.forms.modules.template.service.rbac.TemplateResourceIdService;
 import fr.paris.lutece.plugins.forms.service.IFormDatabaseService;
 import fr.paris.lutece.plugins.forms.service.IFormDisplayService;
 import fr.paris.lutece.plugins.forms.util.FormsConstants;
@@ -66,9 +70,13 @@ import fr.paris.lutece.plugins.forms.web.admin.AbstractFormQuestionJspBean;
 import fr.paris.lutece.plugins.forms.web.exception.CodeAlreadyExistsException;
 import fr.paris.lutece.plugins.genericattributes.service.entrytype.EntryTypeServiceManager;
 import fr.paris.lutece.plugins.genericattributes.service.entrytype.IEntryTypeService;
+import fr.paris.lutece.portal.business.rbac.RBAC;
+import fr.paris.lutece.portal.business.user.AdminUser;
 import fr.paris.lutece.portal.service.admin.AccessDeniedException;
+import fr.paris.lutece.portal.service.i18n.I18nService;
 import fr.paris.lutece.portal.service.message.AdminMessage;
 import fr.paris.lutece.portal.service.message.AdminMessageService;
+import fr.paris.lutece.portal.service.rbac.RBACService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.template.AppTemplateService;
 import fr.paris.lutece.portal.service.util.AppLogService;
@@ -92,7 +100,8 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     private static final String MARK_TEMPLATE_LIST = "template_list";
     private static final String MARK_PAGINATOR = "paginator";
     private static final String MARK_NB_ITEMS_PER_PAGE = "nb_items_per_page";
-
+    private static final String MARK_PERMISSION_CREATE_TEMPLATE = "permission_create_template";
+    
     // Templates
     private static final String TEMPLATE_MANAGE_TEMPLATES_STEP = "/admin/plugins/forms/modules/template/manage_templates.html";
     private static final String TEMPLATE_CREATE_TEMPLATES_STEP = "/admin/plugins/forms/modules/template/create_template.html";
@@ -138,7 +147,8 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     private static final String INFO_DELETE_TEMPLATE_SUCCESSFUL = "module.forms.template.info.deleteTemplate.successful";
 
     private ITemplateService _templateService = SpringContextService.getBean( TemplateService.BEAN_NAME );
-
+    protected Template _template;
+    
     /**
      * Build the Manage View
      * 
@@ -149,14 +159,14 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     @View( value = VIEW_MANAGE_TEMPLATES, defaultView = true )
     public String getManageTemplates( HttpServletRequest request )
     {
-        List<Step> listTemplates = TemplateStepHome.getAllTemplates( );
+        List<Template> listTemplates = TemplateStepHome.getAllTemplates( );
 
         int defaultItemsPerPage = AppPropertiesService.getPropertyInt( PROPERTY_ITEM_PER_PAGE, 50 );
         _strCurrentPageIndex = AbstractPaginator.getPageIndex( request, AbstractPaginator.PARAMETER_PAGE_INDEX, _strCurrentPageIndex );
         _nItemsPerPage = AbstractPaginator.getItemsPerPage( request, AbstractPaginator.PARAMETER_ITEMS_PER_PAGE, _nItemsPerPage, defaultItemsPerPage );
 
         Map<String, Object> model = getModel( );
-        LocalizedPaginator<Step> paginator = new LocalizedPaginator<>( listTemplates, _nItemsPerPage, getJspManageForm( request ), PARAMETER_PAGE_INDEX,
+        LocalizedPaginator<Template> paginator = new LocalizedPaginator<>( listTemplates, _nItemsPerPage, getJspManageForm( request ), PARAMETER_PAGE_INDEX,
                 _strCurrentPageIndex, getLocale( ) );
 
         model.put( MARK_PAGINATOR, paginator );
@@ -164,6 +174,19 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
 
         model.put( MARK_TEMPLATE_LIST, paginator.getPageItems( ) );
         model.put( MARK_LOCALE, getLocale( ) );
+        
+        AdminUser adminUser = getUser( );
+        model.put( MARK_PERMISSION_CREATE_TEMPLATE, RBACService.isAuthorized( Template.RESOURCE_TYPE, RBAC.WILDCARD_RESOURCES_ID, TemplateResourceIdService.PERMISSION_CREATE, (User) adminUser ) );
+        
+        List<TemplateRbacAction> listActions = SpringContextService.getBeansOfType( TemplateRbacAction.class );
+        listActions = I18nService.localizeCollection( listActions, getLocale( ) );
+
+        for ( Template template : paginator.getPageItems( ) )
+        {
+            List<TemplateRbacAction> listAuthorizedFormActions = (List<TemplateRbacAction>) RBACService.getAuthorizedActionsCollection( listActions, template, (User) getUser( ) );
+            template.setActions( listAuthorizedFormActions );
+
+        }
 
         HtmlTemplate templateList = AppTemplateService.getTemplate( TEMPLATE_MANAGE_TEMPLATES_STEP, getLocale( ), model );
 
@@ -182,12 +205,12 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     {
 
         int nIdStep = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE );
-        if ( _step == null || ( nIdStep != FormsConstants.DEFAULT_ID_VALUE && nIdStep != _step.getId( ) ) )
+        if ( _template == null || ( nIdStep != FormsConstants.DEFAULT_ID_VALUE && nIdStep != _template.getId( ) ) )
         {
-            _step = TemplateStepHome.findByPrimaryKey( nIdStep );
+            _template = TemplateStepHome.findByPrimaryKey( nIdStep );
         }
 
-        if ( _step == null )
+        if ( _template == null )
         {
             return redirectView( request, VIEW_MANAGE_TEMPLATES );
         }
@@ -211,12 +234,12 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     {
 
         int nIdStep = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE );
-        if ( _step == null || ( nIdStep != FormsConstants.DEFAULT_ID_VALUE && nIdStep != _step.getId( ) ) )
+        if ( _template == null || ( nIdStep != FormsConstants.DEFAULT_ID_VALUE && nIdStep != _template.getId( ) ) )
         {
-            _step = TemplateStepHome.findByPrimaryKey( nIdStep );
+            _template = TemplateStepHome.findByPrimaryKey( nIdStep );
         }
 
-        if ( _step == null )
+        if ( _template == null )
         {
             return redirectView( request, VIEW_MANAGE_TEMPLATES );
         }
@@ -239,11 +262,11 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     @View( VIEW_CREATE_TEMPLATE )
     public String getCreateTemplate( HttpServletRequest request ) throws AccessDeniedException
     {
-        _step = ( _step != null ) ? _step : new Step( );
+        _template = ( _template != null ) ? _template : new Template( );
 
         Map<String, Object> model = getModel( );
 
-        model.put( FormsConstants.MARK_STEP, _step );
+        model.put( FormsConstants.MARK_STEP, _template );
         return getPage( PROPERTY_PAGE_TITLE_CREATE_TEMPLATE, TEMPLATE_CREATE_TEMPLATES_STEP, model );
     }
 
@@ -257,9 +280,9 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     @Action( ACTION_CREATE_TEMPLATE )
     public String doCreateTemplate( HttpServletRequest request )
     {
-        populate( _step, request, request.getLocale( ) );
+        populate( _template, request, request.getLocale( ) );
 
-        TemplateStepHome.create( _step );
+        TemplateStepHome.create( _template );
         addInfo( INFO_TEMPLATE_CREATED, getLocale( ) );
 
         return redirectView( request, VIEW_MANAGE_TEMPLATES );
@@ -270,10 +293,10 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     {
         int nIdTemplate = Integer.parseInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ) );
 
-        _step = TemplateStepHome.findByPrimaryKey( nIdTemplate );
+        _template = TemplateStepHome.findByPrimaryKey( nIdTemplate );
 
         Map<String, Object> model = getModel( );
-        model.put( FormsConstants.MARK_STEP, _step );
+        model.put( FormsConstants.MARK_STEP, _template );
         model.put( FormsConstants.MARK_ENTRY_TYPE_REF_LIST, FormsEntryUtils.initListEntryType( ) );
         model.put( FormsConstants.MARK_ID_PARENT, _nIdParentSelected );
 
@@ -338,7 +361,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         }
 
         Form mockForm = new Form( );
-        mockForm.setTitle( _step.getTitle( ) );
+        mockForm.setTitle( _template.getTitle( ) );
         model.put( FormsConstants.MARK_FORM, mockForm );
         model.put( MARK_ADD_FILE_COMMENT, false );
         model.put( MARK_ACTION, "jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp" );
@@ -379,7 +402,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
             AppLogService.error( ERROR_CODE_EXISTS + e.getCode( ), e );
             addError( ERROR_QUESTION_CODE_ALREADY_EXISTS, getLocale( ) );
         }
-        return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _step.getId( ) );
+        return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _template.getId( ) );
 
     }
 
@@ -397,7 +420,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         {
             String strReturnUrl = processQuestionCreation( request, VIEW_MODIFY_TEMPLATE );
             return strReturnUrl != null ? strReturnUrl
-                    : redirect( request, VIEW_MODIFY_QUESTION, FormsConstants.PARAMETER_ID_STEP, _step.getId( ), FormsConstants.PARAMETER_ID_QUESTION,
+                    : redirect( request, VIEW_MODIFY_QUESTION, FormsConstants.PARAMETER_ID_STEP, _template.getId( ), FormsConstants.PARAMETER_ID_QUESTION,
                             _question.getId( ) );
 
         }
@@ -405,7 +428,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         {
             AppLogService.error( ERROR_CODE_EXISTS, e );
             addError( ERROR_QUESTION_CODE_ALREADY_EXISTS, getLocale( ) );
-            return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _step.getId( ) );
+            return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _template.getId( ) );
         }
     }
 
@@ -456,7 +479,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         Map<String, Object> model = initModifyQuestionModel( request );
 
         Form mockForm = new Form( );
-        mockForm.setTitle( _step.getTitle( ) );
+        mockForm.setTitle( _template.getTitle( ) );
         model.put( FormsConstants.MARK_FORM, mockForm );
         model.put( MARK_ADD_FILE_COMMENT, false );
         model.put( MARK_ACTION, "jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp" );
@@ -499,7 +522,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
             AppLogService.error( ERROR_CODE_EXISTS + e.getCode( ), e );
             addError( ERROR_QUESTION_CODE_ALREADY_EXISTS, getLocale( ) );
         }
-        return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _step.getId( ) );
+        return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _template.getId( ) );
     }
 
     /**
@@ -516,12 +539,12 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         String strMessage = StringUtils.EMPTY;
         int nIdStep = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE );
 
-        if ( _step == null || ( nIdStep != FormsConstants.DEFAULT_ID_VALUE && nIdStep != _step.getId( ) ) )
+        if ( _template == null || ( nIdStep != FormsConstants.DEFAULT_ID_VALUE && nIdStep != _template.getId( ) ) )
         {
-            _step = TemplateStepHome.findByPrimaryKey( nIdStep );
+            _template = TemplateStepHome.findByPrimaryKey( nIdStep );
         }
 
-        if ( _step == null )
+        if ( _template == null )
         {
             return redirectView( request, VIEW_MANAGE_TEMPLATES );
         }
@@ -534,7 +557,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
 
         if ( _formDisplay == null )
         {
-            return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _step.getId( ) );
+            return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _template.getId( ) );
         }
 
         if ( CompositeDisplayType.QUESTION.getLabel( ).equalsIgnoreCase( _formDisplay.getCompositeType( ) ) )
@@ -573,7 +596,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
 
         if ( _formDisplay == null )
         {
-            return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _step.getId( ) );
+            return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _template.getId( ) );
         }
 
         getFormDisplayService( ).deleteDisplayAndDescendants( nIdDisplay );
@@ -677,7 +700,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         {
             addInfo( INFO_QUESTION_DUPLICATED, getLocale( ) );
         }
-        return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _step.getId( ) );
+        return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _template.getId( ) );
     }
 
     @Action( ACTION_EXPORT_FORM )

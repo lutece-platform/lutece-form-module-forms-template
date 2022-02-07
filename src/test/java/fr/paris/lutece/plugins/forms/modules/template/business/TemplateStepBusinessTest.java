@@ -33,7 +33,6 @@
  */
 package fr.paris.lutece.plugins.forms.modules.template.business;
 
-import fr.paris.lutece.plugins.forms.business.Step;
 import fr.paris.lutece.test.LuteceTestCase;
 
 /**
@@ -52,28 +51,28 @@ public class TemplateStepBusinessTest extends LuteceTestCase
     public void testBusiness( )
     {
         // Initialize an object
-        Step step = new Step( );
-        step.setTitle( TITLE1 );
-        step.setDescription( DESCRIPTION1 );
+        Template template = new Template( );
+        template.setTitle( TITLE1 );
+        template.setDescription( DESCRIPTION1 );
 
         // Create test
-        TemplateStepHome.create( step );
-        Step stepStored = TemplateStepHome.findByPrimaryKey( step.getId( ) );
-        assertEquals( stepStored.getTitle( ), step.getTitle( ) );
-        assertEquals( stepStored.getDescription( ), step.getDescription( ) );
+        TemplateStepHome.create( template );
+        Template templateStored = TemplateStepHome.findByPrimaryKey( template.getId( ) );
+        assertEquals( templateStored.getTitle( ), template.getTitle( ) );
+        assertEquals( templateStored.getDescription( ), template.getDescription( ) );
 
         // Update test
-        step.setTitle( TITLE2 );
-        step.setDescription( DESCRIPTION2 );
-        TemplateStepHome.update( step );
-        stepStored = TemplateStepHome.findByPrimaryKey( step.getId( ) );
-        assertEquals( stepStored.getTitle( ), step.getTitle( ) );
-        assertEquals( stepStored.getDescription( ), step.getDescription( ) );
+        template.setTitle( TITLE2 );
+        template.setDescription( DESCRIPTION2 );
+        TemplateStepHome.update( template );
+        templateStored = TemplateStepHome.findByPrimaryKey( template.getId( ) );
+        assertEquals( templateStored.getTitle( ), template.getTitle( ) );
+        assertEquals( templateStored.getDescription( ), template.getDescription( ) );
 
         // Delete test
-        TemplateStepHome.remove( step.getId( ) );
-        stepStored = TemplateStepHome.findByPrimaryKey( step.getId( ) );
-        assertNull( stepStored );
+        TemplateStepHome.remove( template.getId( ) );
+        templateStored = TemplateStepHome.findByPrimaryKey( template.getId( ) );
+        assertNull( templateStored );
 
     }
 

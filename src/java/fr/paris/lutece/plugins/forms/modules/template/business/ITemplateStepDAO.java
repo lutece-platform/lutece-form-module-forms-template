@@ -35,7 +35,6 @@ package fr.paris.lutece.plugins.forms.modules.template.business;
 
 import java.util.List;
 
-import fr.paris.lutece.plugins.forms.business.Step;
 import fr.paris.lutece.portal.service.plugin.Plugin;
 
 /**
@@ -46,28 +45,28 @@ public interface ITemplateStepDAO
     /**
      * Insert a new record in the table.
      * 
-     * @param step
+     * @param template
      *            instance of the Step object to insert
      * @param plugin
      *            the Plugin
      */
-    void insert( Step step, Plugin plugin );
+    void insert( Template template, Plugin plugin );
 
     /**
      * Update the record in the table
      * 
-     * @param step
-     *            the reference of the Step
+     * @param template
+     *            the reference of the Template
      * @param plugin
      *            the Plugin
      */
-    void store( Step step, Plugin plugin );
+    void store( Template template, Plugin plugin );
 
     /**
      * Delete a record from the table
      * 
      * @param nKey
-     *            The identifier of the Step to delete
+     *            The identifier of the Template to delete
      * @param plugin
      *            the Plugin
      */
@@ -80,21 +79,21 @@ public interface ITemplateStepDAO
      * Load the data from the table
      * 
      * @param nKey
-     *            The identifier of the step
+     *            The identifier of the template
      * @param plugin
      *            the Plugin
-     * @return The instance of the step
+     * @return The instance of the template
      */
-    Step load( int nKey, Plugin plugin );
+    Template load( int nKey, Plugin plugin );
 
     /**
      * Load all templates
      * 
      * @param nKey
-     *            The identifier of the step
+     *            The identifier of the template
      * @param plugin
      *            the Plugin
-     * @return The instance of the step
+     * @return The instance of the template
      */
-    List<Step> findAll( Plugin plugin );
+    List<Template> findAll( Plugin plugin );
 }

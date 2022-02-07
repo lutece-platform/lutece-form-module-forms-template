@@ -2,8 +2,10 @@
     <@columns>
 		<@box color='primary'>
 			<@boxHeader title='#i18n{module.forms.template.manageTemplates.title}' class='is-align-items-center' boxTools=true>
-                <@aButton href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=createTemplate' buttonIcon='plus' title='#i18n{module.forms.template.manageTemplates.buttonAdd}' hideTitle=['xs','sm'] class='card-header-icon' color='secondary' />
-                <@aButton title='#i18n{forms.manage_steps.buttonImport}' buttonIcon='upload' size='sm' params='data-toggle="modal" data-target="#importJsonModal" ' hideTitle=['xs','sm'] />
+				<#if permission_create_template>
+	                <@aButton href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=createTemplate' buttonIcon='plus' title='#i18n{module.forms.template.manageTemplates.buttonAdd}' hideTitle=['xs','sm'] class='card-header-icon' color='secondary' />
+	                <@aButton title='#i18n{forms.manage_steps.buttonImport}' buttonIcon='upload' size='sm' params='data-toggle="modal" data-target="#importJsonModal" ' hideTitle=['xs','sm'] />
+                </#if>
             </@boxHeader>
             <@boxBody>
             	<@table>
@@ -17,10 +19,20 @@
                             <@td>${template.title}</@td>
                             <@td>${template.description}</@td>
                             <@td>
-                            	<@aButton href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=manageQuestions&id_step=${template.id}' title='#i18n{module.forms.template.manageTemplates.action.modify.name}' hideTitle=['all'] color='primary' buttonIcon='edit' size='sm' />
-                            	<@aButton href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?action=duplicateTemplate&id_step=${template.id}' title='#i18n{module.forms.template.manageTemplates.action.duplicateTemplate}' hideTitle=['all'] buttonIcon='copy' size='sm' />
-                            	<@aButton href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?action=doExportJson&id_step=${template.id}' title='#i18n{module.forms.template.manageTemplates.action.exportTemplate}' hideTitle=['all'] buttonIcon='download' size='sm' />
-                            	<@aButton href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=getConfirmRemoveTemplate&id_step=${template.id}' title='#i18n{module.forms.template.manageTemplates.action.deleteTemplate}' hideTitle=['all'] color='danger' buttonIcon='trash' size='sm' />
+                            	<#if template.actions?exists>
+                            		 <#list template.actions as action>
+                            		 	<#assign color='' />
+                                        <#assign perm=action.permission?lower_case />
+                                        <#assign params='' />
+                                        <#if action.permission=='DELETE'>
+                                            <#assign color = 'danger' />
+                                            <#assign perm='' />
+										<#else>
+											<#assign color = 'primary' />
+                                        </#if>
+                                        <@aButton href='${action.url}&id_step=${template.id}' title='${action.name}' hideTitle=['all'] color='${color}' class='${perm}' buttonIcon=action.iconUrl params=params size='sm' />
+                            		 </#list>
+                            	</#if>
                             </@td>
                        	</@tr>
                     </#list>

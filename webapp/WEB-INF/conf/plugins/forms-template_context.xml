@@ -21,4 +21,30 @@
     <bean id="forms-template.stepTemplateProvider" class="fr.paris.lutece.plugins.forms.modules.template.service.StepTemplateProvider" />
     
     <bean id="forms-template.templateReferenceItemListener" class="fr.paris.lutece.plugins.forms.modules.template.service.TemplateReferenceItemListener" />
+    
+    <!-- RbacActions -->
+    <bean id="forms-template.rbacActionModify" class="fr.paris.lutece.plugins.forms.modules.template.service.rbac.TemplateRbacAction">
+        <property name="url" value="jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=manageQuestions" />
+        <property name="nameKey" value="module.forms.template.action.modify.name" />
+        <property name="iconUrl" value="cog" />
+        <property name="permission" value="MODIFY" />
+    </bean>
+    <bean id="forms-template.rbacActionDelete" class="fr.paris.lutece.plugins.forms.modules.template.service.rbac.TemplateRbacAction">
+        <property name="url" value="jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=getConfirmRemoveTemplate" />
+        <property name="nameKey" value="module.forms.template.action.delete.name" />
+        <property name="iconUrl" value="trash" />
+        <property name="permission" value="DELETE" />
+    </bean>
+    <bean id="forms-template.rbacActionCopy" class="fr.paris.lutece.plugins.forms.modules.template.service.rbac.TemplateRbacAction">
+        <property name="url" value="jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?action=duplicateTemplate" />
+        <property name="nameKey" value="module.forms.template.action.copy.name" />
+        <property name="iconUrl" value="copy" />
+        <property name="permission" value="MODIFY" />
+    </bean>
+    <bean id="forms-template.rbacActionExport" class="fr.paris.lutece.plugins.forms.modules.template.service.rbac.TemplateRbacAction">
+        <property name="url" value="jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?action=doExportJson" />
+        <property name="nameKey" value="module.forms.template.action.download.name" />
+        <property name="iconUrl" value="download" />
+        <property name="permission" value="MODIFY" />
+    </bean>
 </beans>

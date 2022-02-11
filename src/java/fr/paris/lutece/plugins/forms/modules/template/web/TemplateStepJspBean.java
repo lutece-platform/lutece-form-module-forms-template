@@ -33,6 +33,7 @@
  */
 package fr.paris.lutece.plugins.forms.modules.template.web;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -719,7 +720,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         {
             String content = TemplateJsonService.getInstance( ).jsonExportStep( -1, nId );
             Step step = TemplateStepHome.findByPrimaryKey( nId );
-            download( content.getBytes( ), FileUtil.normalizeFileName( step.getTitle( ) ) + ".json", "application/json" );
+            download( content.getBytes( StandardCharsets.UTF_8 ), FileUtil.normalizeFileName( step.getTitle( ) ) + ".json", "application/json" );
         }
         catch( JsonProcessingException e )
         {
@@ -736,7 +737,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
 
         try
         {
-            TemplateJsonService.getInstance( ).jsonImportStep( 0, new String( fileItem.get( ) ), getLocale( ) );
+            TemplateJsonService.getInstance( ).jsonImportStep( 0, new String( fileItem.get( ), StandardCharsets.UTF_8 ), getLocale( ) );
             addInfo( INFO_TEMPLATE_CREATED, getLocale( ) );
         }
         catch( JsonProcessingException e )

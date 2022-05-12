@@ -102,7 +102,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     private static final String MARK_PAGINATOR = "paginator";
     private static final String MARK_NB_ITEMS_PER_PAGE = "nb_items_per_page";
     private static final String MARK_PERMISSION_CREATE_TEMPLATE = "permission_create_template";
-    
+
     // Templates
     private static final String TEMPLATE_MANAGE_TEMPLATES_STEP = "/admin/plugins/forms/modules/template/manage_templates.html";
     private static final String TEMPLATE_CREATE_TEMPLATES_STEP = "/admin/plugins/forms/modules/template/create_template.html";
@@ -136,7 +136,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     private static final String PARAMETER_PAGE_INDEX = "page_index";
     private static final String PARAMETER_JSON_FILE = "json_file";
     private static final String PARAMETER_CANCEL = "cancel";
-    
+
     // Properties for page titles
     private static final String PROPERTY_PAGE_TITLE_CREATE_TEMPLATE = "module.forms.template.create_template.pageTitle";
 
@@ -147,10 +147,10 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     private static final String INFO_TEMPLATE_CREATED = "module.forms.template.info.template.created";
     private static final String WARNING_CONFIRM_REMOVE_QUESTION = "module.forms.template.warning.deleteTemplate";
     private static final String INFO_DELETE_TEMPLATE_SUCCESSFUL = "module.forms.template.info.deleteTemplate.successful";
-    
+
     private ITemplateService _templateService = SpringContextService.getBean( TemplateService.BEAN_NAME );
     protected Template _template;
-    
+
     /**
      * Build the Manage View
      * 
@@ -176,16 +176,18 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
 
         model.put( MARK_TEMPLATE_LIST, paginator.getPageItems( ) );
         model.put( MARK_LOCALE, getLocale( ) );
-        
+
         AdminUser adminUser = getUser( );
-        model.put( MARK_PERMISSION_CREATE_TEMPLATE, RBACService.isAuthorized( Template.RESOURCE_TYPE, RBAC.WILDCARD_RESOURCES_ID, TemplateResourceIdService.PERMISSION_CREATE, (User) adminUser ) );
-        
+        model.put( MARK_PERMISSION_CREATE_TEMPLATE,
+                RBACService.isAuthorized( Template.RESOURCE_TYPE, RBAC.WILDCARD_RESOURCES_ID, TemplateResourceIdService.PERMISSION_CREATE, (User) adminUser ) );
+
         List<TemplateRbacAction> listActions = SpringContextService.getBeansOfType( TemplateRbacAction.class );
         listActions = I18nService.localizeCollection( listActions, getLocale( ) );
 
         for ( Template template : paginator.getPageItems( ) )
         {
-            List<TemplateRbacAction> listAuthorizedFormActions = (List<TemplateRbacAction>) RBACService.getAuthorizedActionsCollection( listActions, template, (User) getUser( ) );
+            List<TemplateRbacAction> listAuthorizedFormActions = (List<TemplateRbacAction>) RBACService.getAuthorizedActionsCollection( listActions, template,
+                    (User) getUser( ) );
             template.setActions( listAuthorizedFormActions );
 
         }
@@ -779,7 +781,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         }
         return redirectView( request, VIEW_MANAGE_TEMPLATES );
     }
-    
+
     /**
      * Perform the template modification
      * 
@@ -791,18 +793,18 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
      */
     public String doModifyTemplate( HttpServletRequest request ) throws AccessDeniedException
     {
-        
+
         if ( request.getParameter( PARAMETER_CANCEL ) == null )
         {
             int nId = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE );
             _template = TemplateStepHome.findByPrimaryKey( nId );
             populate( _template, request, request.getLocale( ) );
-            
+
             TemplateStepHome.update( _template );
             return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, nId );
         }
         return redirectView( request, VIEW_MANAGE_TEMPLATES );
-        
+
     }
 
     @Override

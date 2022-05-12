@@ -1,3 +1,36 @@
+/*
+ * Copyright (c) 2002-2022, City of Paris
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *  1. Redistributions of source code must retain the above copyright notice
+ *     and the following disclaimer.
+ *
+ *  2. Redistributions in binary form must reproduce the above copyright notice
+ *     and the following disclaimer in the documentation and/or other materials
+ *     provided with the distribution.
+ *
+ *  3. Neither the name of 'Mairie de Paris' nor 'Lutece' nor the names of its
+ *     contributors may be used to endorse or promote products derived from
+ *     this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * License 1.0
+ */
 package fr.paris.lutece.plugins.forms.modules.template.business;
 
 import java.util.List;
@@ -13,9 +46,9 @@ public class Template extends Step implements RBACResource
     private static final long serialVersionUID = -69707611597729199L;
 
     public static final String RESOURCE_TYPE = "FORMS_TEMPLATE";
-    
+
     private List<TemplateRbacAction> _listActions;
-    
+
     @Override
     public String getResourceTypeCode( )
     {
@@ -25,27 +58,27 @@ public class Template extends Step implements RBACResource
     @Override
     public String getResourceId( )
     {
-        return StringUtils.EMPTY +  getId( );
+        return StringUtils.EMPTY + getId( );
     }
-    
-    /**
-    *
-    * @return a list of action can be use for the template
-    */
-   public List<TemplateRbacAction> getActions( )
-   {
-       return _listActions;
-   }
 
-   /**
-    * set a list of action can be use for the template
-    * 
-    * @param actions
-    *            a list of action must be use for the template
-    */
-   public void setActions( List<TemplateRbacAction> actions )
-   {
-       _listActions = actions;
-   }
+    /**
+     *
+     * @return a list of action can be use for the template
+     */
+    public List<TemplateRbacAction> getActions( )
+    {
+        return _listActions;
+    }
+
+    /**
+     * set a list of action can be use for the template
+     * 
+     * @param actions
+     *            a list of action must be use for the template
+     */
+    public void setActions( List<TemplateRbacAction> actions )
+    {
+        _listActions = actions;
+    }
 
 }

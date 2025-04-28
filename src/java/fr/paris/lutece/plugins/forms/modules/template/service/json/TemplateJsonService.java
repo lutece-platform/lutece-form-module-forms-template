@@ -39,7 +39,7 @@ import fr.paris.lutece.plugins.forms.business.FormDisplay;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateDisplayHome;
 import fr.paris.lutece.plugins.forms.modules.template.service.TemplateDatabaseService;
 import fr.paris.lutece.plugins.forms.service.json.AbstractFormJsonService;
-import fr.paris.lutece.portal.service.spring.SpringContextService;
+import jakarta.enterprise.inject.spi.CDI;
 
 public class TemplateJsonService extends AbstractFormJsonService
 {
@@ -48,7 +48,7 @@ public class TemplateJsonService extends AbstractFormJsonService
 
     private TemplateJsonService( )
     {
-        super( SpringContextService.getBean( TemplateDatabaseService.BEAN_NAME ) );
+        super( CDI.current( ).select( TemplateDatabaseService.class ).get( ) );
     }
 
     public static TemplateJsonService getInstance( )

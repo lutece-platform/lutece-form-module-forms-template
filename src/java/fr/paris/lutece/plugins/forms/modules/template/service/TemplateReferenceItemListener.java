@@ -46,14 +46,19 @@ import fr.paris.lutece.plugins.genericattributes.business.Field;
 import fr.paris.lutece.plugins.genericattributes.service.entrytype.IEntryTypeService;
 import fr.paris.lutece.plugins.genericattributes.util.GenericAttributesUtils;
 import fr.paris.lutece.plugins.referencelist.business.ReferenceItem;
-import fr.paris.lutece.plugins.referencelist.service.IReferenceItemListener;
+import fr.paris.lutece.plugins.referencelist.service.ReferenceItemEvent;
+import fr.paris.lutece.portal.service.event.EventAction;
+import fr.paris.lutece.portal.service.event.Type;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.ObservesAsync;
 
-public class TemplateReferenceItemListener implements IReferenceItemListener
+@ApplicationScoped
+public class TemplateReferenceItemListener
 {
-    @Override
-    public void addReferenceItem( ReferenceItem item )
+    public void addReferenceItem( @ObservesAsync @Type(EventAction.CREATE) ReferenceItemEvent event )
     {
-        List<Entry> entryList = listConcernedEntries( item.getIdreference( ) );
+    	ReferenceItem item = event.getReferenceItem( );
+    	List<Entry> entryList = listConcernedEntries( item.getIdreference( ) );
         if ( CollectionUtils.isEmpty( entryList ) )
         {
             return;
@@ -66,9 +71,9 @@ public class TemplateReferenceItemListener implements IReferenceItemListener
         }
     }
 
-    @Override
-    public void removeReferenceItem( ReferenceItem item )
+    public void removeReferenceItem( @ObservesAsync @Type(EventAction.REMOVE) ReferenceItemEvent event )
     {
+    	ReferenceItem item = event.getReferenceItem( );
         List<Integer> idFields = TemplateReferenceItemFieldHome.findIdFieldByIdItem( item.getId( ) );
         for ( Integer id : idFields )
         {
@@ -77,10 +82,10 @@ public class TemplateReferenceItemListener implements IReferenceItemListener
         TemplateReferenceItemFieldHome.removeByItem( item.getId( ) );
     }
 
-    @Override
-    public void updateReferenceItem( ReferenceItem item )
+    public void updateReferenceItem( @ObservesAsync @Type(EventAction.UPDATE) ReferenceItemEvent event )
     {
-        List<Integer> idFields = TemplateReferenceItemFieldHome.findIdFieldByIdItem( item.getId( ) );
+    	ReferenceItem item = event.getReferenceItem( );
+    	List<Integer> idFields = TemplateReferenceItemFieldHome.findIdFieldByIdItem( item.getId( ) );
         for ( Integer id : idFields )
         {
             Field field = TemplateFieldHome.findByPrimaryKey( id );

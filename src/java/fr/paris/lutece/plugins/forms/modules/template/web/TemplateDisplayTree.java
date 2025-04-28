@@ -44,7 +44,7 @@ import fr.paris.lutece.plugins.forms.modules.template.business.TemplateStepHome;
 import fr.paris.lutece.plugins.forms.modules.template.service.ITemplateService;
 import fr.paris.lutece.plugins.forms.modules.template.service.TemplateService;
 import fr.paris.lutece.plugins.forms.web.ICompositeDisplay;
-import fr.paris.lutece.portal.service.spring.SpringContextService;
+import jakarta.enterprise.inject.spi.CDI;
 
 public class TemplateDisplayTree
 {
@@ -52,7 +52,7 @@ public class TemplateDisplayTree
     private final List<ICompositeDisplay> _listICompositeDisplay = new ArrayList<>( );
     private List<Control> _listDisplayControls = new ArrayList<>( );
 
-    private ITemplateService _templateService = SpringContextService.getBean( TemplateService.BEAN_NAME );
+    private ITemplateService _templateService = CDI.current( ).select( TemplateService.class ).get( );
     private Step _step;
 
     /**

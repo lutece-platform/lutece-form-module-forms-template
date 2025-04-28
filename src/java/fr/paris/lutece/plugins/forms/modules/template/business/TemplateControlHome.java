@@ -40,7 +40,7 @@ import fr.paris.lutece.plugins.forms.business.ControlMapping;
 import fr.paris.lutece.plugins.forms.business.ControlType;
 import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.portal.service.plugin.PluginService;
-import fr.paris.lutece.portal.service.spring.SpringContextService;
+import jakarta.enterprise.inject.spi.CDI;
 
 /**
  * This class provides instances management methods (create, find, ...) for Control objects
@@ -48,7 +48,7 @@ import fr.paris.lutece.portal.service.spring.SpringContextService;
 public final class TemplateControlHome
 {
     // Static variable pointed at the DAO instance
-    private static ITemplateControlDAO _dao = SpringContextService.getBean( "forms-template.templateControlDAO" );
+    private static ITemplateControlDAO _dao = CDI.current( ).select( ITemplateControlDAO.class ).get( );
     private static Plugin _plugin = PluginService.getPlugin( "forms" );
 
     /**

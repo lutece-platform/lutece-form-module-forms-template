@@ -44,10 +44,12 @@ import fr.paris.lutece.plugins.forms.business.ControlMapping;
 import fr.paris.lutece.plugins.forms.business.ControlType;
 import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.util.sql.DAOUtil;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * This class provides Data Access methods for Control objects
  */
+@ApplicationScoped
 public final class TemplateControlDAO implements ITemplateControlDAO
 {
     // Constants

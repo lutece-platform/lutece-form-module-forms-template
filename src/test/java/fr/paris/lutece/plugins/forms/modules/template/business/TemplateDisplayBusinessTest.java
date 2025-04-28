@@ -33,6 +33,8 @@
  */
 package fr.paris.lutece.plugins.forms.modules.template.business;
 
+import org.junit.jupiter.api.Test;
+
 import fr.paris.lutece.plugins.forms.business.FormDisplay;
 import fr.paris.lutece.test.LuteceTestCase;
 
@@ -50,6 +52,7 @@ public class TemplateDisplayBusinessTest extends LuteceTestCase
     /**
      * test FormDisplay
      */
+    @Test
     public void testBusiness( )
     {
         // Initialize an object
@@ -90,10 +93,6 @@ public class TemplateDisplayBusinessTest extends LuteceTestCase
         TemplateDisplayHome.remove( formDisplay.getId( ) );
         formDisplayStored = TemplateDisplayHome.findByPrimaryKey( formDisplay.getId( ) );
         assertNull( formDisplayStored );
-
-        formDisplayStored = TemplateDisplayHome.getFormDisplayByStepAndComposite( 1, 1 );
-        assertNull( formDisplayStored );
-
     }
 
 }

@@ -45,13 +45,16 @@ import fr.paris.lutece.plugins.forms.modules.template.business.TemplateGroupHome
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateQuestionHome;
 import fr.paris.lutece.plugins.forms.service.AbstractFormDisplayService;
 import fr.paris.lutece.plugins.forms.service.IFormDatabaseService;
-import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.util.ReferenceList;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
+@ApplicationScoped
 public class TemplateDisplayService extends AbstractFormDisplayService
 {
-    public static final String BEAN_NAME = "forms-template.templateDisplayService";
-
+	@Inject
+	private TemplateDatabaseService _templateDatabaseService;
+	
     @Override
     public void deleteDisplayAndDescendants( int nIdDisplay )
     {
@@ -114,6 +117,6 @@ public class TemplateDisplayService extends AbstractFormDisplayService
     @Override
     protected IFormDatabaseService initFormDatabaseService( )
     {
-        return SpringContextService.getBean( TemplateDatabaseService.BEAN_NAME );
+        return _templateDatabaseService;
     }
 }

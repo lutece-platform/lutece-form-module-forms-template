@@ -42,10 +42,12 @@ import fr.paris.lutece.plugins.genericattributes.business.Entry;
 import fr.paris.lutece.plugins.genericattributes.business.Field;
 import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.util.sql.DAOUtil;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * This class provides Data Access methods for ReportingFiche objects
  */
+@ApplicationScoped
 public final class TemplateFieldDAO implements ITemplateFieldDAO
 {
     // Constants

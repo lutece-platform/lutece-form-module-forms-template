@@ -37,14 +37,14 @@ import java.util.List;
 
 import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.portal.service.plugin.PluginService;
-import fr.paris.lutece.portal.service.spring.SpringContextService;
+import jakarta.enterprise.inject.spi.CDI;
 
 /**
  * This class provides instances management methods (create, find, ...) for Template objects
  */
 public final class TemplateStepHome
 {
-    private static ITemplateStepDAO _dao = SpringContextService.getBean( "forms-template.templateStepDAO" );
+    private static ITemplateStepDAO _dao = CDI.current( ).select( ITemplateStepDAO.class ).get( );
     private static Plugin _plugin = PluginService.getPlugin( "forms" );
 
     /**

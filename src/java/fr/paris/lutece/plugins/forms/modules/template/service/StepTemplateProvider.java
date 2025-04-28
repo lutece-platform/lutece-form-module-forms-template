@@ -44,15 +44,19 @@ import fr.paris.lutece.plugins.forms.service.json.IStepTemplateProvider;
 import fr.paris.lutece.plugins.forms.service.json.StepJsonData;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.util.ReferenceList;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Named;
 
 /**
  * Implements {@link IStepTemplateProvider}
  *
  */
+@ApplicationScoped
+@Named( StepTemplateProvider.BEAN_NAME )
 public class StepTemplateProvider implements IStepTemplateProvider
 {
 
-    private static final String BEAN_NAME = "forms-template.stepTemplateProvider";
+    public static final String BEAN_NAME = "forms-template.stepTemplateProvider";
 
     @Override
     public ReferenceList getStepTemplateList( )

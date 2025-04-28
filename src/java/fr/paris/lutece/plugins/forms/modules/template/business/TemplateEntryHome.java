@@ -40,9 +40,9 @@ import fr.paris.lutece.plugins.genericattributes.business.Field;
 import fr.paris.lutece.plugins.genericattributes.service.entrytype.IEntryTypeService;
 import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.portal.service.plugin.PluginService;
-import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.util.sql.TransactionManager;
+import jakarta.enterprise.inject.spi.CDI;
 
 /**
  * This class provides instances management methods (create, find, ...) for Entry objects
@@ -50,7 +50,7 @@ import fr.paris.lutece.util.sql.TransactionManager;
 public final class TemplateEntryHome
 {
     // Static variable pointed at the DAO instance
-    private static ITemplateEntryDAO _dao = SpringContextService.getBean( "forms-template.templateEntryDAO" );
+    private static ITemplateEntryDAO _dao = CDI.current( ).select( ITemplateEntryDAO.class ).get( );
     private static Plugin _plugin = PluginService.getPlugin( "forms" );
 
     /**

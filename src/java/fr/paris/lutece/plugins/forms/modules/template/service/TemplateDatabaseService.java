@@ -53,7 +53,11 @@ import fr.paris.lutece.plugins.forms.modules.template.business.TemplateStepHome;
 import fr.paris.lutece.plugins.forms.service.IFormDatabaseService;
 import fr.paris.lutece.plugins.genericattributes.business.Entry;
 import fr.paris.lutece.plugins.genericattributes.business.Field;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Named;
 
+@ApplicationScoped
+@Named( TemplateDatabaseService.BEAN_NAME )
 public class TemplateDatabaseService implements IFormDatabaseService
 {
     public static final String BEAN_NAME = "forms-template.templateDatabaseService";

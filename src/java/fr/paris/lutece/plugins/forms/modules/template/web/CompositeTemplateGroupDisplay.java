@@ -38,7 +38,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.enterprise.inject.spi.CDI;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -51,11 +52,9 @@ import fr.paris.lutece.plugins.forms.business.Group;
 import fr.paris.lutece.plugins.forms.business.Question;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateDisplayHome;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateGroupHome;
-import fr.paris.lutece.plugins.forms.modules.template.service.ITemplateService;
 import fr.paris.lutece.plugins.forms.modules.template.service.TemplateService;
 import fr.paris.lutece.plugins.forms.web.ICompositeDisplay;
 import fr.paris.lutece.plugins.forms.web.entrytype.DisplayType;
-import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
 
 public class CompositeTemplateGroupDisplay implements ICompositeDisplay
@@ -64,7 +63,7 @@ public class CompositeTemplateGroupDisplay implements ICompositeDisplay
     private static final String PROPERTY_COMPOSITE_GROUP_ICON = "forms.composite.group.icon";
     private static final String DEFAULT_GROUP_ICON = "indent";
 
-    private ITemplateService _templateService = SpringContextService.getBean( TemplateService.BEAN_NAME );
+    private TemplateService _templateService = CDI.current( ).select( TemplateService.class ).get( );
 
     private final List<ICompositeDisplay> _listChildren = new ArrayList<>( );
     private final FormDisplay _templateDisplay;

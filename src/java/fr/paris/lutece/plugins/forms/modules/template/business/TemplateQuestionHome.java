@@ -38,7 +38,7 @@ import java.util.List;
 import fr.paris.lutece.plugins.forms.business.Question;
 import fr.paris.lutece.portal.service.plugin.Plugin;
 import fr.paris.lutece.portal.service.plugin.PluginService;
-import fr.paris.lutece.portal.service.spring.SpringContextService;
+import jakarta.enterprise.inject.spi.CDI;
 
 /**
  * This class provides instances management methods (create, find, ...) for Question objects
@@ -46,7 +46,7 @@ import fr.paris.lutece.portal.service.spring.SpringContextService;
 public final class TemplateQuestionHome
 {
     // Static variable pointed at the DAO instance
-    private static ITemplateQuestionDAO _dao = SpringContextService.getBean( "forms-template.templateQuestionDAO" );
+    private static ITemplateQuestionDAO _dao = CDI.current( ).select( ITemplateQuestionDAO.class ).get( );
     private static Plugin _plugin = PluginService.getPlugin( "forms" );
 
     /**

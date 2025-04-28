@@ -49,6 +49,27 @@ public class TemplateRbacAction implements RBACAction, Localizable
     private Locale _locale;
 
     /**
+     * Default constructor
+     * 
+     */
+    public TemplateRbacAction( )
+    {
+    	
+    }
+    
+    /**
+     * Constructor
+     * 
+     */
+    public TemplateRbacAction( String url, String nameKey, String iconUrl, String permission )
+    {
+    	_strUrl = url;
+		_strNameKey = nameKey;
+		_strIconUrl = iconUrl;
+		_strPermission = permission;
+    }
+    
+    /**
      * Returns the Url
      *
      * @return The Url

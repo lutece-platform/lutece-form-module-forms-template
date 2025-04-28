@@ -44,14 +44,17 @@ import fr.paris.lutece.plugins.forms.modules.template.web.TemplateDisplayTree;
 import fr.paris.lutece.plugins.forms.service.IFormDisplayService;
 import fr.paris.lutece.plugins.forms.util.FormsConstants;
 import fr.paris.lutece.plugins.forms.web.ICompositeDisplay;
-import fr.paris.lutece.portal.service.spring.SpringContextService;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
+@ApplicationScoped
 public class TemplateService implements ITemplateService
 {
     private static final int DISPLAY_ROOT_PARENT_ID = 0;
 
-    public static final String BEAN_NAME = "forms-template.templateService";
-
+    @Inject
+    private TemplateDisplayService _templateDisplayService;
+    
     @Override
     public List<ICompositeDisplay> getTemplateCompositeList( int nIdTemplate )
     {
@@ -80,13 +83,11 @@ public class TemplateService implements ITemplateService
     @Override
     public void deleteTemplate( int nIdTemplate )
     {
-        IFormDisplayService displayService = SpringContextService.getBean( TemplateDisplayService.BEAN_NAME );
-
         List<FormDisplay> listChildrenDisplay = TemplateDisplayHome.getFormDisplayListByParent( nIdTemplate, DISPLAY_ROOT_PARENT_ID );
 
         for ( FormDisplay childDisplay : listChildrenDisplay )
         {
-            displayService.deleteDisplayAndDescendants( childDisplay.getId( ) );
+            _templateDisplayService.deleteDisplayAndDescendants( childDisplay.getId( ) );
         }
 
         TemplateStepHome.remove( nIdTemplate );

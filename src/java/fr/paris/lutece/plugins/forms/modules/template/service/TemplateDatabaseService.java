@@ -36,6 +36,7 @@ package fr.paris.lutece.plugins.forms.modules.template.service;
 import java.util.List;
 
 import fr.paris.lutece.plugins.forms.business.Control;
+import fr.paris.lutece.plugins.forms.business.ControlGroup;
 import fr.paris.lutece.plugins.forms.business.ControlMapping;
 import fr.paris.lutece.plugins.forms.business.FormDisplay;
 import fr.paris.lutece.plugins.forms.business.Group;
@@ -54,9 +55,15 @@ import fr.paris.lutece.plugins.forms.service.IFormDatabaseService;
 import fr.paris.lutece.plugins.genericattributes.business.Entry;
 import fr.paris.lutece.plugins.genericattributes.business.Field;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Typed;
 import jakarta.inject.Named;
 
+/**
+ * IFormDatabaseService implementation for templates. Typed to its own class so that it never competes with the forms
+ * FormDatabaseService for the @Default IFormDatabaseService injection points of plugin-forms.
+ */
 @ApplicationScoped
+@Typed( TemplateDatabaseService.class )
 @Named( TemplateDatabaseService.BEAN_NAME )
 public class TemplateDatabaseService implements IFormDatabaseService
 {
@@ -195,6 +202,12 @@ public class TemplateDatabaseService implements IFormDatabaseService
     }
 
     @Override
+    public void createControlGroup( ControlGroup controlGroup )
+    {
+        // Template controls do not support control groups (no id_control_group column in template_control)
+    }
+
+    @Override
     public List<Group> getGroupsListByIdStepList( List<Integer> idStepList )
     {
         return TemplateGroupHome.getGroupsListByIdStepList( idStepList );
@@ -225,6 +238,7 @@ public class TemplateDatabaseService implements IFormDatabaseService
         template.setTitle( step.getTitle( ) );
         template.setDescription( step.getDescription( ) );
         TemplateStepHome.create( template );
+        step.setId( template.getId( ) );
     }
 
     @Override

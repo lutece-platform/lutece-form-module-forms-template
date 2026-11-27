@@ -39,23 +39,52 @@ import fr.paris.lutece.plugins.forms.business.FormDisplay;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateDisplayHome;
 import fr.paris.lutece.plugins.forms.modules.template.service.TemplateDatabaseService;
 import fr.paris.lutece.plugins.forms.service.json.AbstractFormJsonService;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.spi.CDI;
+import jakarta.inject.Inject;
 
+/**
+ * Json service to export and import the step templates, working on the template tables
+ */
+@ApplicationScoped
 public class TemplateJsonService extends AbstractFormJsonService
 {
-
-    public static final TemplateJsonService INSTANCE = new TemplateJsonService( );
-
-    private TemplateJsonService( )
+    /**
+     * No-arg constructor required by CDI for client-proxy generation. The proxy never serves business calls, so the null database service passed to the
+     * parent is never used.
+     */
+    protected TemplateJsonService( )
     {
-        super( CDI.current( ).select( TemplateDatabaseService.class ).get( ) );
+        super( null );
     }
 
+    /**
+     * CDI constructor-injection entry point.
+     *
+     * @param templateDatabaseService
+     *            the template database service
+     */
+    @Inject
+    public TemplateJsonService( TemplateDatabaseService templateDatabaseService )
+    {
+        super( templateDatabaseService );
+    }
+
+    /**
+     * Returns the template json service bean
+     *
+     * @return the template json service
+     * @deprecated inject {@link TemplateJsonService} in a CDI bean instead
+     */
+    @Deprecated
     public static TemplateJsonService getInstance( )
     {
-        return INSTANCE;
+        return CDI.current( ).select( TemplateJsonService.class ).get( );
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected List<FormDisplay> getAllFormDisplays( int idForm, int idStep )
     {

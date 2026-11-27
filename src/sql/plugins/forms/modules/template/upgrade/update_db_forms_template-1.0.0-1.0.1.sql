@@ -1,3 +1,6 @@
+-- liquibase formatted sql
+-- changeset forms-template:update_db_forms_template-1.0.0-1.0.1.sql
+-- preconditions onFail:MARK_RAN onError:WARN
 INSERT INTO template_step (id_template, title, description) VALUES (1, 'Activité', '');
 INSERT INTO template_step (id_template, title, description) VALUES (2, 'Candidature', '');
 INSERT INTO template_step (id_template, title, description) VALUES (3, 'Coordonnées du gestionnaire administratif', 'Coordonnées du gestionnaire administratif');

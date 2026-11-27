@@ -3,7 +3,7 @@
     <parent>
         <artifactId>lutece-global-pom</artifactId>
         <groupId>fr.paris.lutece.tools</groupId>
-        <version>8.0.0</version>
+        <version>8.0.4</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
@@ -26,13 +26,13 @@
         <dependency>
             <groupId>fr.paris.lutece</groupId>
             <artifactId>lutece-core</artifactId>
-            <version>[8.0.0-SNAPSHOT,)</version>
+            <version>[8.1.0-SNAPSHOT,)</version>
             <type>lutece-core</type>
         </dependency>
         <dependency>
             <groupId>fr.paris.lutece.plugins</groupId>
             <artifactId>plugin-forms</artifactId>
-            <version>[3.0.0-SNAPSHOT,)</version>
+            <version>[4.1.0-SNAPSHOT,)</version>
             <type>lutece-plugin</type>
         </dependency>
         <!-- JUnit -->
@@ -45,15 +45,12 @@
         <dependency>
             <groupId>org.glassfish.jaxb</groupId>
             <artifactId>jaxb-runtime</artifactId>
-            <version>4.0.5</version>
             <scope>test</scope>  
         </dependency>
     </dependencies>
 
     <properties>
         <componentName>forms-template</componentName>
-        <jiraProjectName>FORMSTMPL</jiraProjectName>
-        <jiraComponentId>16480</jiraComponentId>
     </properties>
     <scm>
         <connection>scm:git:https://github.com/lutece-platform/lutece-form-module-forms-template.git</connection>

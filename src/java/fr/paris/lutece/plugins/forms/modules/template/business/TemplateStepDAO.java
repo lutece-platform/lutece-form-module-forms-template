@@ -142,6 +142,8 @@ public final class TemplateStepDAO implements ITemplateStepDAO
     }
 
     /**
+     * Builds a template from the current row. A template is its own scope for the question codes: its form identifier is its own identifier, the
+     * identifier the template database service reads the questions by (getListQuestionByForm)
      * 
      * @param daoUtil
      *            The daoutil
@@ -152,6 +154,7 @@ public final class TemplateStepDAO implements ITemplateStepDAO
         Template template = new Template( );
 
         template.setId( daoUtil.getInt( "id_template" ) );
+        template.setIdForm( template.getId( ) );
         template.setTitle( daoUtil.getString( "title" ) );
         template.setDescription( daoUtil.getString( "description" ) );
         return template;

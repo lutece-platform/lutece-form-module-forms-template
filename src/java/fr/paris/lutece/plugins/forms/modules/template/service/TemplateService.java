@@ -33,17 +33,26 @@
  */
 package fr.paris.lutece.plugins.forms.modules.template.service;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import fr.paris.lutece.plugins.forms.business.CompositeDisplayType;
+import fr.paris.lutece.plugins.forms.business.Control;
 import fr.paris.lutece.plugins.forms.business.FormDisplay;
+import fr.paris.lutece.plugins.forms.business.Question;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateDisplayHome;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateStepHome;
+import fr.paris.lutece.plugins.forms.modules.template.service.preview.StepTemplatePreview;
+import fr.paris.lutece.plugins.forms.modules.template.service.preview.StepTemplatePreviewService;
 import fr.paris.lutece.plugins.forms.modules.template.web.CompositeTemplateGroupDisplay;
 import fr.paris.lutece.plugins.forms.modules.template.web.CompositeTemplateQuestionDisplay;
 import fr.paris.lutece.plugins.forms.modules.template.web.TemplateDisplayTree;
 import fr.paris.lutece.plugins.forms.service.IFormDisplayService;
 import fr.paris.lutece.plugins.forms.util.FormsConstants;
 import fr.paris.lutece.plugins.forms.web.ICompositeDisplay;
+import fr.paris.lutece.plugins.genericattributes.business.Entry;
+import fr.paris.lutece.portal.service.util.AppLogService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -51,9 +60,17 @@ import jakarta.inject.Inject;
 public class TemplateService implements ITemplateService
 {
     private static final int DISPLAY_ROOT_PARENT_ID = 0;
+    private static final String PREFIX_COPY = "Copie de ";
+    private static final String PREFIX_CODE = "question_";
 
     @Inject
     private TemplateDisplayService _templateDisplayService;
+
+    @Inject
+    private TemplateDatabaseService _templateDatabaseService;
+
+    @Inject
+    private StepTemplatePreviewService _previewService;
     
     @Override
     public List<ICompositeDisplay> getTemplateCompositeList( int nIdTemplate )
@@ -91,5 +108,66 @@ public class TemplateService implements ITemplateService
         }
 
         TemplateStepHome.remove( nIdTemplate );
+    }
+
+    @Override
+    public boolean duplicateQuestion( int nIdTemplate, int nIdQuestion )
+    {
+        Question question = _templateDatabaseService.findQuestionByPrimaryKey( nIdQuestion );
+        FormDisplay displayToCopy = _templateDatabaseService.getFormDisplayByFormStepAndComposite( 0, nIdTemplate, nIdQuestion );
+
+        if ( _templateDatabaseService.findStepByPrimaryKey( nIdTemplate ) == null || question == null || question.getIdStep( ) != nIdTemplate
+                || displayToCopy == null )
+        {
+            return false;
+        }
+
+        Question questionCopy;
+        try
+        {
+            questionCopy = question.clone( );
+        }
+        catch( CloneNotSupportedException e )
+        {
+            AppLogService.error( "Forms template : the question {} could not be cloned", nIdQuestion, e );
+            return false;
+        }
+
+        Entry entryCopy = _templateDatabaseService.copyEntry( question.getEntry( ) );
+        entryCopy.setTitle( PREFIX_COPY + entryCopy.getTitle( ) );
+        entryCopy.setCode( PREFIX_CODE + entryCopy.getIdEntry( ) );
+        _templateDatabaseService.updateEntry( entryCopy );
+
+        questionCopy.setEntry( entryCopy );
+        questionCopy.setIdEntry( entryCopy.getIdEntry( ) );
+        questionCopy.setTitle( PREFIX_COPY + question.getTitle( ) );
+        questionCopy.setCode( entryCopy.getCode( ) );
+        _templateDatabaseService.createQuestion( questionCopy );
+
+        for ( Control control : _templateDatabaseService.getControlByQuestion( nIdQuestion ) )
+        {
+            Set<Integer> setIdQuestion = new HashSet<>( );
+            setIdQuestion.add( questionCopy.getId( ) );
+            control.setListIdQuestion( setIdQuestion );
+            control.setIdControlTarget( questionCopy.getId( ) );
+            _templateDatabaseService.createControl( control );
+        }
+
+        FormDisplay displayCopy = new FormDisplay( );
+        displayCopy.setDisplayOrder( displayToCopy.getDisplayOrder( ) + 1 );
+        displayCopy.setStepId( nIdTemplate );
+        displayCopy.setParentId( displayToCopy.getParentId( ) );
+        displayCopy.setCompositeId( questionCopy.getId( ) );
+        displayCopy.setCompositeType( CompositeDisplayType.QUESTION.getLabel( ) );
+        displayCopy.setDepth( displayToCopy.getDepth( ) );
+        _templateDatabaseService.createFormDisplay( displayCopy );
+
+        return true;
+    }
+
+    @Override
+    public StepTemplatePreview getTemplatePreview( int nIdTemplate )
+    {
+        return _previewService.getPreview( nIdTemplate );
     }
 }

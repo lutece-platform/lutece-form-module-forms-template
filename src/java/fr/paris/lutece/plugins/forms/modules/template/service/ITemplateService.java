@@ -36,6 +36,7 @@ package fr.paris.lutece.plugins.forms.modules.template.service;
 import java.util.List;
 
 import fr.paris.lutece.plugins.forms.business.FormDisplay;
+import fr.paris.lutece.plugins.forms.modules.template.service.preview.StepTemplatePreview;
 import fr.paris.lutece.plugins.forms.web.ICompositeDisplay;
 
 public interface ITemplateService
@@ -68,4 +69,25 @@ public interface ITemplateService
      *            The Template Id
      */
     void deleteTemplate( int nIdTemplate );
+
+    /**
+     * Duplicates a question of a template right after it, in the template tables: its entry with its fields, its validation controls and its display.
+     * The question is copied under the title "Copie de" its title.
+     * 
+     * @param nIdTemplate
+     *            The template identifier
+     * @param nIdQuestion
+     *            The identifier of the question to copy
+     * @return true when the question was duplicated, false when the template, the question or its display is unknown
+     */
+    boolean duplicateQuestion( int nIdTemplate, int nIdQuestion );
+
+    /**
+     * Builds the preview of a template: the tree of its questions and groups, and the thumbnail drawn from it
+     * 
+     * @param nIdTemplate
+     *            The template identifier
+     * @return its preview; null when no template has this identifier
+     */
+    StepTemplatePreview getTemplatePreview( int nIdTemplate );
 }

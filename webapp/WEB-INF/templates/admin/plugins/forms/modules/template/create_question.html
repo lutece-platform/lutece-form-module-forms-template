@@ -1,12 +1,12 @@
-<@formGroup labelKey='#i18n{forms.create_question.labelVisibleMultiviewGlobal}' hideLabel=['all']>
-    <@checkBox labelFor='is_visible_multiview_global' labelKey='#i18n{forms.create_question.labelVisibleMultiviewGlobal}' name='is_visible_multiview_global' id='is_visible_multiview_global' value='1' />
+<@formGroup labelKey='#i18n{forms.modify_question.labelDisplayMultiviewGlobal}' hideLabel=['all']>
+    <@checkBox orientation='switch' labelKey='#i18n{forms.modify_question.labelDisplayMultiviewGlobal}' name='is_visible_multiview_global' id='is_visible_multiview_global' value='1' />
 </@formGroup>
-<@formGroup labelKey='#i18n{forms.create_question.labelVisibleMultiviewFormSelected}' hideLabel=['all']>
-    <@checkBox labelFor='is_visible_multiview_form_selected' labelKey='#i18n{forms.create_question.labelVisibleMultiviewFormSelected}' name='is_visible_multiview_form_selected' id='is_visible_multiview_form_selected' value='1' />
+<@formGroup labelKey='#i18n{forms.modify_question.labelDisplayMultiviewFormSelected}' hideLabel=['all']>
+    <@checkBox orientation='switch' labelKey='#i18n{forms.modify_question.labelDisplayMultiviewFormSelected}' name='is_visible_multiview_form_selected' id='is_visible_multiview_form_selected' value='1' />
 </@formGroup>
-<@formGroup labelFor='column_title' labelKey='#i18n{forms.create_question.labelColumnTitle}' helpKey='#i18n{forms.create_question.labelColumnTitle.help}'>
-    <@input type='text' name='column_title' value='' />
+<@formGroup labelFor='column_title' labelKey='#i18n{forms.modify_question.labelColumnTitle}'>
+    <@input type='text' name='column_title' id='column_title' value='' />
 </@formGroup>
-<@formGroup labelFor='multiview_column_order' labelKey='#i18n{forms.create_question.labelColumnOrderTitle}' helpKey='#i18n{forms.create_question.labelColumnOrderTitle.help}'>
-    <@input type='number' name='multiview_column_order' min=0 />
+<@formGroup labelFor='multiview_column_order' labelKey='#i18n{forms.modify_question.labelColumnOrderTitle}'>
+    <@input type='number' name='multiview_column_order' id='multiview_column_order' min=0 />
 </@formGroup>

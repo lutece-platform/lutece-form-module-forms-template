@@ -1,0 +1,34 @@
+<#--
+Macro: stepTemplateThumbnail
+Description: the thumbnail of a step template, an SVG wireframe drawn from its fields. Decorative: the list of the fields says the same in text.
+Parameters:
+- preview (StepTemplatePreview, required): the preview of the template (StepTemplatePreviewService, or template_provider.stepTemplatePreviews[code])
+- class (string, optional): CSS classes of the image
+- width (number, optional): the width the image is shown at, its height following; 240 by default
+Snippet:
+    <@stepTemplateThumbnail preview=template_previews[template.id?c] width=96 />
+-->
+<#macro stepTemplateThumbnail preview class='' width=240>
+<img src="${preview.thumbnailUrl}" alt="" aria-hidden="true" loading="lazy" class="step-template-thumbnail${class?has_content?then(' ' + class, '')}" width="${width?c}" />
+</#macro>
+<#--
+Macro: stepTemplateFields
+Description: the list of the fields of a step template, in display order: each question with the icon of its type, the groups in bold.
+Parameters:
+- preview (StepTemplatePreview, required): the preview of the template
+- class (string, optional): CSS classes of the list
+Snippet:
+    <@stepTemplateFields preview=template_previews[template.id?c] class='small text-secondary' />
+-->
+<#macro stepTemplateFields preview class=''>
+<#local fields = preview.flatFields />
+<#if fields?has_content>
+<ul class="list-inline mb-0 step-template-fields${class?has_content?then(' ' + class, '')}" aria-label="#i18n{module.forms.template.manageTemplates.labelPreview}">
+	<#list fields as field>
+	<li class="list-inline-item<#if field.group> fw-semibold</#if>"><#if field.iconName?has_content><@icon style=field.iconName class='me-1' /></#if>${field.title!}</li>
+	</#list>
+</ul>
+<#else>
+<span class="step-template-fields fst-italic${class?has_content?then(' ' + class, '')}">#i18n{module.forms.template.manageTemplates.labelNoQuestion}</span>
+</#if>
+</#macro>

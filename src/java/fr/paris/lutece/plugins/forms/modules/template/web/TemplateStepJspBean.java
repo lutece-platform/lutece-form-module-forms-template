@@ -34,6 +34,7 @@
 package fr.paris.lutece.plugins.forms.modules.template.web;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,8 +43,8 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 
@@ -53,7 +54,7 @@ import fr.paris.lutece.api.user.User;
 import fr.paris.lutece.plugins.forms.business.CompositeDisplayType;
 import fr.paris.lutece.plugins.forms.business.Form;
 import fr.paris.lutece.plugins.forms.business.FormDisplay;
-import fr.paris.lutece.plugins.forms.business.FormDisplayHome;
+import fr.paris.lutece.plugins.forms.business.FormLayout;
 import fr.paris.lutece.plugins.forms.business.Step;
 import fr.paris.lutece.plugins.forms.modules.template.business.Template;
 import fr.paris.lutece.plugins.forms.modules.template.business.TemplateDisplayHome;
@@ -63,6 +64,7 @@ import fr.paris.lutece.plugins.forms.modules.template.service.TemplateDisplaySer
 import fr.paris.lutece.plugins.forms.modules.template.service.TemplateService;
 import fr.paris.lutece.plugins.forms.modules.template.service.json.TemplateJsonService;
 import fr.paris.lutece.plugins.forms.modules.template.service.rbac.TemplateRbacAction;
+import fr.paris.lutece.plugins.forms.modules.template.service.preview.StepTemplatePreview;
 import fr.paris.lutece.plugins.forms.modules.template.service.rbac.TemplateResourceIdService;
 import fr.paris.lutece.plugins.forms.service.IFormDatabaseService;
 import fr.paris.lutece.plugins.forms.service.IFormDisplayService;
@@ -82,30 +84,34 @@ import fr.paris.lutece.portal.service.message.AdminMessageService;
 import fr.paris.lutece.portal.service.rbac.RBACService;
 import fr.paris.lutece.portal.service.template.AppTemplateService;
 import fr.paris.lutece.portal.service.upload.MultipartItem;
+import fr.paris.lutece.portal.service.template.HtmlMarkup;
 import fr.paris.lutece.portal.service.util.AppLogService;
-import fr.paris.lutece.portal.service.util.AppPropertiesService;
+import fr.paris.lutece.portal.service.util.AppPathService;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.Action;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.View;
 import fr.paris.lutece.portal.web.upload.MultipartHttpServletRequest;
-import fr.paris.lutece.portal.web.util.LocalizedPaginator;
+import fr.paris.lutece.portal.web.util.IPager;
+import fr.paris.lutece.portal.web.util.Pager;
 import fr.paris.lutece.util.file.FileUtil;
-import fr.paris.lutece.util.html.AbstractPaginator;
+import fr.paris.lutece.util.html.IPaginator;
 import fr.paris.lutece.util.html.HtmlTemplate;
+import fr.paris.lutece.util.ReferenceList;
+import fr.paris.lutece.portal.web.cdi.mvc.Models;
 import fr.paris.lutece.util.url.UrlItem;
 
 @SessionScoped
 @Named
-@Controller( controllerJsp = "ManageTemplatesStep.jsp", controllerPath = "jsp/admin/plugins/forms/modules/template/", right = "TEMPLATE_STEP_MANAGEMENT" )
+@Controller( controllerJsp = "ManageTemplatesStep.jsp", controllerPath = "jsp/admin/plugins/forms/modules/template/", right = "TEMPLATE_STEP_MANAGEMENT", securityTokenEnabled = true )
 public class TemplateStepJspBean extends AbstractFormQuestionJspBean
 {
     private static final long serialVersionUID = -7133586597439667057L;
 
     // Markers
     private static final String MARK_TEMPLATE_LIST = "template_list";
-    private static final String MARK_PAGINATOR = "paginator";
-    private static final String MARK_NB_ITEMS_PER_PAGE = "nb_items_per_page";
+    private static final String MARK_TEMPLATE_PREVIEWS = "template_previews";
     private static final String MARK_PERMISSION_CREATE_TEMPLATE = "permission_create_template";
+    private static final String MARK_WEBAPP_URL = "webapp_url";
 
     // Templates
     private static final String TEMPLATE_MANAGE_TEMPLATES_STEP = "/admin/plugins/forms/modules/template/manage_templates.html";
@@ -116,12 +122,12 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     private static final String TEMPLATE_CREATE_QUESTION = "/admin/plugins/forms/modules/template/create_question.html";
     private static final String TEMPLATE_MODIFY_QUESTION = "/admin/plugins/forms/modules/template/modify_question.html";
     private static final String TEMPLATE_BREADCRUMBS = "/admin/plugins/forms/modules/template/entries/all_entry_breadcrumbs.html";
-    private static final String TEMPLATE_MOVE_COMPOSITE = "/admin/plugins/forms/modules/template/move_composite.html";
 
     // Views
     private static final String VIEW_MANAGE_TEMPLATES = "manageTemplates";
     private static final String VIEW_CREATE_TEMPLATE = "createTemplate";
     private static final String VIEW_MODIFY_TEMPLATE = "modifyTemplate";
+    private static final String JSP_MANAGE_TEMPLATES_STEP = "jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp";
     private static final String VIEW_CONFIRM_REMOVE_COMPOSITE = "getConfirmRemoveComposite";
     private static final String VIEW_CONFIRM_REMOVE_TEMPLATE = "getConfirmRemoveTemplate";
 
@@ -136,12 +142,20 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
 
     // Properties
     private static final String PROPERTY_ITEM_PER_PAGE = "forms-template.itemsPerPage";
+    private static final String PROPERTY_ROOT_LEVEL_LABEL = "forms.moveComposite.rootLevel.label";
+    private static final String PARAMETER_ACTION = "action";
+    private static final String PARAMETER_VIEW = "view";
     private static final String PROPERTY_CREATE_GROUP_TITLE = "forms.create_group.title";
 
     // Parameters
-    private static final String PARAMETER_PAGE_INDEX = "page_index";
     private static final String PARAMETER_JSON_FILE = "json_file";
     private static final String PARAMETER_CANCEL = "cancel";
+
+    // Validation
+    private static final String TEMPLATE_VALIDATION_ATTRIBUTES_PREFIX = "forms.model.entity.step.attribute.";
+
+    // Content types
+    private static final String CONTENT_TYPE_JSON = "application/json;charset=UTF-8";
 
     // Properties for page titles
     private static final String PROPERTY_PAGE_TITLE_CREATE_TEMPLATE = "module.forms.template.create_template.pageTitle";
@@ -150,8 +164,9 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     private static final String ERROR_TEMPLATE_NOT_IMPORTED = "module.forms.template.error.template.not.imported";
     private static final String ERROR_TEMPLATE_NOT_EXPORTED = "module.forms.template.error.template.not.exported";
     private static final String ERROR_TEMPLATE_NOT_COPIED = "module.forms.template.error.template.not.copied";
+    private static final String ERROR_TEMPLATE_NOT_FOUND = "module.forms.template.error.template.not.found";
     private static final String INFO_TEMPLATE_CREATED = "module.forms.template.info.template.created";
-    private static final String WARNING_CONFIRM_REMOVE_QUESTION = "module.forms.template.warning.deleteTemplate";
+    private static final String WARNING_CONFIRM_REMOVE_TEMPLATE = "module.forms.template.warning.deleteTemplate";
     private static final String INFO_DELETE_TEMPLATE_SUCCESSFUL = "module.forms.template.info.deleteTemplate.successful";
 
     @Inject
@@ -166,6 +181,13 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     
     @Inject
     private TemplateDisplayService _templateDisplayService;
+
+    @Inject
+    private TemplateJsonService _templateJsonService;
+
+    @Inject
+    @Pager( listBookmark = MARK_TEMPLATE_LIST, defaultItemsPerPage = PROPERTY_ITEM_PER_PAGE, baseUrl = JSP_MANAGE_TEMPLATES_STEP )
+    private IPager<Template, Template> _pager;
     
     /**
      * Build the Manage View
@@ -174,43 +196,31 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
      *            The HTTP request
      * @return The page
      */
-    @View( value = VIEW_MANAGE_TEMPLATES, defaultView = true )
-    public String getManageTemplates( HttpServletRequest request )
+    @View( value = VIEW_MANAGE_TEMPLATES, defaultView = true, securityTokenAction = ACTION_IMPORT_STEP )
+    public String getManageTemplates( Models model, HttpServletRequest request )
     {
-        List<Template> listTemplates = TemplateStepHome.getAllTemplates( );
+        IPaginator<Template> paginator = _pager.withListItem( TemplateStepHome.getAllTemplates( ) ).populateModels( request, model, getLocale( ) );
 
-        int defaultItemsPerPage = AppPropertiesService.getPropertyInt( PROPERTY_ITEM_PER_PAGE, 50 );
-        _strCurrentPageIndex = AbstractPaginator.getPageIndex( request, AbstractPaginator.PARAMETER_PAGE_INDEX, _strCurrentPageIndex );
-        _nItemsPerPage = AbstractPaginator.getItemsPerPage( request, AbstractPaginator.PARAMETER_ITEMS_PER_PAGE, _nItemsPerPage, defaultItemsPerPage );
-
-        Map<String, Object> model = getModel( );
-        LocalizedPaginator<Template> paginator = new LocalizedPaginator<>( listTemplates, _nItemsPerPage, getJspManageForm( request ), PARAMETER_PAGE_INDEX,
-                _strCurrentPageIndex, getLocale( ) );
-
-        model.put( MARK_PAGINATOR, paginator );
-        model.put( MARK_NB_ITEMS_PER_PAGE, String.valueOf( _nItemsPerPage ) );
-
-        model.put( MARK_TEMPLATE_LIST, paginator.getPageItems( ) );
         model.put( MARK_LOCALE, getLocale( ) );
+        model.put( MARK_LINK_TOKENS, Map.of( ACTION_DUPLICATE_TEMPLATE, getSecurityToken( request, ACTION_DUPLICATE_TEMPLATE ) ) );
 
         AdminUser adminUser = getUser( );
         model.put( MARK_PERMISSION_CREATE_TEMPLATE,
                 RBACService.isAuthorized( Template.RESOURCE_TYPE, RBAC.WILDCARD_RESOURCES_ID, TemplateResourceIdService.PERMISSION_CREATE, (User) adminUser ) );
 
         List<TemplateRbacAction> listActions = _formsTemplateRbacAction.stream( ).toList( );
-        listActions = I18nService.localizeCollection( listActions, getLocale( ) );
+        Map<String, StepTemplatePreview> mapPreviews = new HashMap<>( );
 
         for ( Template template : paginator.getPageItems( ) )
         {
+            mapPreviews.put( String.valueOf( template.getId( ) ), _templateService.getTemplatePreview( template.getId( ) ) );
             List<TemplateRbacAction> listAuthorizedFormActions = (List<TemplateRbacAction>) RBACService.getAuthorizedActionsCollection( listActions, template,
                     (User) getUser( ) );
             template.setActions( listAuthorizedFormActions );
-
         }
+        model.put( MARK_TEMPLATE_PREVIEWS, mapPreviews );
 
-        HtmlTemplate templateList = AppTemplateService.getTemplate( TEMPLATE_MANAGE_TEMPLATES_STEP, getLocale( ), model );
-
-        return getAdminPage( templateList.getHtml( ) );
+        return getPage( StringUtils.EMPTY, TEMPLATE_MANAGE_TEMPLATES_STEP );
     }
 
     /**
@@ -238,7 +248,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         UrlItem url = new UrlItem( getActionUrl( ACTION_REMOVE_TEMPLATE ) );
         url.addParameter( FormsConstants.PARAMETER_ID_STEP, nIdStep );
 
-        String strMessageUrl = AdminMessageService.getMessageUrl( request, WARNING_CONFIRM_REMOVE_QUESTION, url.getUrl( ), AdminMessage.TYPE_CONFIRMATION );
+        String strMessageUrl = AdminMessageService.getMessageUrl( request, WARNING_CONFIRM_REMOVE_TEMPLATE, url.getUrl( ), AdminMessage.TYPE_CONFIRMATION );
         return redirect( request, strMessageUrl );
     }
 
@@ -280,14 +290,12 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
      *             the possible AccessDeniedException
      */
     @View( VIEW_CREATE_TEMPLATE )
-    public String getCreateTemplate( HttpServletRequest request ) throws AccessDeniedException
+    public String getCreateTemplate( Models model, HttpServletRequest request ) throws AccessDeniedException
     {
-        _template = ( _template != null ) ? _template : new Template( );
-
-        Map<String, Object> model = getModel( );
+        _template = new Template( );
 
         model.put( FormsConstants.MARK_STEP, _template );
-        return getPage( PROPERTY_PAGE_TITLE_CREATE_TEMPLATE, TEMPLATE_CREATE_TEMPLATES_STEP, model );
+        return getPage( PROPERTY_PAGE_TITLE_CREATE_TEMPLATE, TEMPLATE_CREATE_TEMPLATES_STEP );
     }
 
     /**
@@ -300,7 +308,16 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     @Action( ACTION_CREATE_TEMPLATE )
     public String doCreateTemplate( HttpServletRequest request )
     {
+        if ( _template == null )
+        {
+            _template = new Template( );
+        }
         populate( _template, request, request.getLocale( ) );
+
+        if ( !validateBean( _template, TEMPLATE_VALIDATION_ATTRIBUTES_PREFIX ) )
+        {
+            return redirectView( request, VIEW_CREATE_TEMPLATE );
+        }
 
         TemplateStepHome.create( _template );
         addInfo( INFO_TEMPLATE_CREATED, getLocale( ) );
@@ -309,24 +326,31 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     }
 
     @View( value = VIEW_MODIFY_TEMPLATE )
-    public String getModifyTemplate( HttpServletRequest request )
+    public String getModifyTemplate( Models model, HttpServletRequest request )
     {
-        int nIdTemplate = Integer.parseInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ) );
+        int nIdTemplate = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE );
 
         _template = TemplateStepHome.findByPrimaryKey( nIdTemplate );
+        if ( _template == null )
+        {
+            return redirect( request, AdminMessageService.getMessageUrl( request, ERROR_TEMPLATE_NOT_FOUND, AdminMessage.TYPE_STOP ) );
+        }
 
-        Map<String, Object> model = getModel( );
         model.put( FormsConstants.MARK_STEP, _template );
         model.put( FormsConstants.MARK_ENTRY_TYPE_REF_LIST, FormsEntryUtils.initListEntryType( ) );
         model.put( FormsConstants.MARK_ID_PARENT, _nIdParentSelected );
 
         List<ICompositeDisplay> listICompositeDisplay = _templateService.getTemplateCompositeList( nIdTemplate );
         model.put( FormsConstants.MARK_COMPOSITE_LIST, listICompositeDisplay );
+        model.put( MARK_LINK_TOKENS, Map.of( ACTION_DUPLICATE_QUESTION, getSecurityToken( request, ACTION_DUPLICATE_QUESTION ), ACTION_MOVE_COMPOSITE,
+                getSecurityToken( request, ACTION_MOVE_COMPOSITE ) ) );
 
-        setPageTitleProperty( StringUtils.EMPTY );
-        HtmlTemplate templateList = AppTemplateService.getTemplate( TEMPLATE_MODIFY_TEMPLATES_STEP, getLocale( ), model );
+        ReferenceList listMoveTargets = new ReferenceList( );
+        listMoveTargets.addItem( 0, I18nService.getLocalizedString( PROPERTY_ROOT_LEVEL_LABEL, getLocale( ) ) );
+        listMoveTargets.addAll( TemplateDisplayHome.getGroupDisplayReferenceListByStep( nIdTemplate ) );
+        model.put( FormsConstants.MARK_LIST_GROUPS, listMoveTargets );
 
-        return getAdminPage( templateList.getHtml( ) );
+        return getPage( StringUtils.EMPTY, TEMPLATE_MODIFY_TEMPLATES_STEP );
     }
 
     /**
@@ -346,9 +370,20 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         {
             int nId = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE );
             _template = TemplateStepHome.findByPrimaryKey( nId );
+            if ( _template == null )
+            {
+                return redirectView( request, VIEW_MANAGE_TEMPLATES );
+            }
             populate( _template, request, request.getLocale( ) );
 
+            if ( !validateBean( _template, TEMPLATE_VALIDATION_ATTRIBUTES_PREFIX ) )
+            {
+                return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, nId );
+            }
+
             TemplateStepHome.update( _template );
+
+            return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, nId );
         }
         return redirectView( request, VIEW_MANAGE_TEMPLATES );
     }
@@ -364,11 +399,12 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     public String getCreateGroup( HttpServletRequest request )
     {
 
-        Map<String, Object> model = initCreateGroupModel( request );
+        Models model = initCreateGroupModel( request );
         if ( model == null )
         {
             return redirectView( request, VIEW_MANAGE_TEMPLATES );
         }
+        model.put( MARK_WEBAPP_URL, AppPathService.getBaseUrl( request ) );
 
         setPageTitleProperty( PROPERTY_CREATE_GROUP_TITLE );
         HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_CREATE_GROUP, getLocale( ), model );
@@ -398,23 +434,23 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     @View( value = VIEW_CREATE_QUESTION )
     public String getCreateQuestion( HttpServletRequest request )
     {
-        Map<String, Object> model = initCreateQuestionModel( request );
+        Models model = initCreateQuestionModel( request );
         if ( model == null )
         {
             return redirectView( request, VIEW_MANAGE_TEMPLATES );
         }
 
         Form mockForm = new Form( );
-        mockForm.setTitle( _template.getTitle( ) );
+        mockForm.setTitle( _step.getTitle( ) );
         model.put( FormsConstants.MARK_FORM, mockForm );
         model.put( MARK_ADD_FILE_COMMENT, false );
         model.put( MARK_ACTION, "jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp" );
-        model.put( FormsConstants.MARK_BREADCRUMBS, AppTemplateService.getTemplate( TEMPLATE_BREADCRUMBS, request.getLocale( ), model ).getHtml( ) );
+        model.put( FormsConstants.MARK_BREADCRUMBS, HtmlMarkup.of( AppTemplateService.getTemplate( TEMPLATE_BREADCRUMBS, request.getLocale( ), model ).getHtml( ) ) );
         model.put( FormsConstants.MARK_QUESTION_CREATE_TEMPLATE,
-                AppTemplateService.getTemplate( TEMPLATE_CREATE_QUESTION, request.getLocale( ), model ).getHtml( ) );
+                HtmlMarkup.of( AppTemplateService.getTemplate( TEMPLATE_CREATE_QUESTION, request.getLocale( ), model ).getHtml( ) ) );
 
         IEntryTypeService entryTypeService = EntryTypeServiceManager.getEntryTypeService( _entry );
-        HtmlTemplate template = AppTemplateService.getTemplate( entryTypeService.getTemplateCreate( _entry, false ), getLocale( ), model );
+        HtmlTemplate template = getTemplateWithPageToken( entryTypeService.getTemplateCreate( _entry, false ), getLocale( ), request );
         return getAdminPage( template.getHtml( ) );
     }
 
@@ -430,7 +466,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     {
         try
         {
-            String strReturnUrl = processQuestionCreation( request, VIEW_MODIFY_TEMPLATE );
+            String strReturnUrl = processQuestionCreation( request, VIEW_MODIFY_TEMPLATE, getErrorReturnUrlOnCreation( request ) );
 
             if ( strReturnUrl != null )
             {
@@ -443,10 +479,10 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         }
         catch( CodeAlreadyExistsException e )
         {
-            AppLogService.error( ERROR_CODE_EXISTS + e.getCode( ), e );
+            AppLogService.error( "{}{}", ERROR_CODE_EXISTS, e.getCode( ), e );
             addError( ERROR_QUESTION_CODE_ALREADY_EXISTS, getLocale( ) );
         }
-        return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _template.getId( ) );
+        return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _step.getId( ) );
 
     }
 
@@ -457,14 +493,14 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
      *            The HTTP request
      * @return The URL to go after performing the action
      */
-    @Action( value = ACTION_CREATE_QUESTION_AND_MANAGE_ENTRIES, securityTokenDisabled = true )
+    @Action( value = ACTION_CREATE_QUESTION_AND_MANAGE_ENTRIES, securityTokenAction = ACTION_CREATE_QUESTION )
     public String doCreateQuestionAndManageEntries( HttpServletRequest request )
     {
         try
         {
-            String strReturnUrl = processQuestionCreation( request, VIEW_MODIFY_TEMPLATE );
+            String strReturnUrl = processQuestionCreation( request, VIEW_MODIFY_TEMPLATE, getErrorReturnUrlOnCreation( request ) );
             return strReturnUrl != null ? strReturnUrl
-                    : redirect( request, VIEW_MODIFY_QUESTION, FormsConstants.PARAMETER_ID_STEP, _template.getId( ), FormsConstants.PARAMETER_ID_QUESTION,
+                    : redirect( request, VIEW_MODIFY_QUESTION, FormsConstants.PARAMETER_ID_STEP, _step.getId( ), FormsConstants.PARAMETER_ID_QUESTION,
                             _question.getId( ) );
 
         }
@@ -472,7 +508,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         {
             AppLogService.error( ERROR_CODE_EXISTS, e );
             addError( ERROR_QUESTION_CODE_ALREADY_EXISTS, getLocale( ) );
-            return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _template.getId( ) );
+            return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _step.getId( ) );
         }
     }
 
@@ -486,11 +522,12 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     @View( value = VIEW_MODIFY_GROUP )
     public String getModifyGroup( HttpServletRequest request )
     {
-        Map<String, Object> model = initModifyGroupModel( request );
+        Models model = initModifyGroupModel( request );
         if ( model == null )
         {
             return redirectView( request, VIEW_MANAGE_TEMPLATES );
         }
+        model.put( MARK_WEBAPP_URL, AppPathService.getBaseUrl( request ) );
 
         setPageTitleProperty( PROPERTY_CREATE_GROUP_TITLE );
         HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_MODIFY_GROUP, getLocale( ), model );
@@ -520,20 +557,24 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     @View( value = VIEW_MODIFY_QUESTION )
     public String getModifyQuestion( HttpServletRequest request )
     {
-        Map<String, Object> model = initModifyQuestionModel( request );
+        Models model = initModifyQuestionModel( request );
+        if ( model == null )
+        {
+            return redirectView( request, VIEW_MANAGE_TEMPLATES );
+        }
 
         Form mockForm = new Form( );
-        mockForm.setTitle( _template.getTitle( ) );
+        mockForm.setTitle( _step.getTitle( ) );
         model.put( FormsConstants.MARK_FORM, mockForm );
         model.put( MARK_ADD_FILE_COMMENT, false );
         model.put( MARK_ACTION, "jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp" );
-        model.put( FormsConstants.MARK_BREADCRUMBS, AppTemplateService.getTemplate( TEMPLATE_BREADCRUMBS, request.getLocale( ), model ).getHtml( ) );
+        model.put( FormsConstants.MARK_BREADCRUMBS, HtmlMarkup.of( AppTemplateService.getTemplate( TEMPLATE_BREADCRUMBS, request.getLocale( ), model ).getHtml( ) ) );
         model.put( FormsConstants.MARK_QUESTION_MODIFY_TEMPLATE,
-                AppTemplateService.getTemplate( TEMPLATE_MODIFY_QUESTION, request.getLocale( ), model ).getHtml( ) );
+                HtmlMarkup.of( AppTemplateService.getTemplate( TEMPLATE_MODIFY_QUESTION, request.getLocale( ), model ).getHtml( ) ) );
 
         IEntryTypeService entryTypeService = EntryTypeServiceManager.getEntryTypeService( _entry );
 
-        HtmlTemplate template = AppTemplateService.getTemplate( entryTypeService.getTemplateModify( _entry, false ), getLocale( ), model );
+        HtmlTemplate template = getTemplateWithPageToken( entryTypeService.getTemplateModify( _entry, false ), getLocale( ), request );
 
         return getAdminPage( template.getHtml( ) );
     }
@@ -550,7 +591,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     {
         try
         {
-            String strReturnUrl = processQuestionUpdate( request );
+            String strReturnUrl = processQuestionUpdate( request, getErrorReturnUrlOnModification( request ) );
 
             if ( strReturnUrl != null )
             {
@@ -563,10 +604,10 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         }
         catch( CodeAlreadyExistsException e )
         {
-            AppLogService.error( ERROR_CODE_EXISTS + e.getCode( ), e );
+            AppLogService.error( "{}{}", ERROR_CODE_EXISTS, e.getCode( ), e );
             addError( ERROR_QUESTION_CODE_ALREADY_EXISTS, getLocale( ) );
         }
-        return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _template.getId( ) );
+        return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _step.getId( ) );
     }
 
     /**
@@ -577,12 +618,12 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
      * @return The URL to go after performing the action
      * @throws AccessDeniedException
      */
-    @Action( value = ACTION_SAVE_QUESTION, securityTokenDisabled = true )
+    @Action( value = ACTION_SAVE_QUESTION, securityTokenAction = ACTION_MODIFY_QUESTION )
     public String doSaveQuestion( HttpServletRequest request ) throws AccessDeniedException
     {
         try
         {
-            String strReturnUrl = processQuestionUpdate( request );
+            String strReturnUrl = processQuestionUpdate( request, getErrorReturnUrlOnModification( request ) );
 
             if ( strReturnUrl != null )
             {
@@ -646,7 +687,9 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
         UrlItem url = new UrlItem( getActionUrl( ACTION_REMOVE_COMPOSITE ) );
         url.addParameter( FormsConstants.PARAMETER_ID_DISPLAY, nIdDisplay );
 
-        String strMessageUrl = AdminMessageService.getMessageUrl( request, strMessage, url.getUrl( ), AdminMessage.TYPE_CONFIRMATION );
+        String strMessageUrl = AdminMessageService.getMessageUrl( request, strMessage, new Object [ ] {
+                getFormDisplayService( ).getDisplayTitle( _formDisplay )
+        }, url.getUrl( ), AdminMessage.TYPE_CONFIRMATION );
         return redirect( request, strMessageUrl );
     }
 
@@ -669,7 +712,7 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
 
         if ( _formDisplay == null )
         {
-            return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _template.getId( ) );
+            return redirectView( request, VIEW_MANAGE_TEMPLATES );
         }
 
         getFormDisplayService( ).deleteDisplayAndDescendants( nIdDisplay );
@@ -682,26 +725,6 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     }
 
     /**
-     * Gets the Move component page
-     * 
-     * @param request
-     *            The HTTP request
-     * @return The move component page
-     */
-    @View( value = VIEW_MOVE_COMPOSITE )
-    public String getMoveComposite( HttpServletRequest request )
-    {
-        Map<String, Object> model = initMoveCompositeModel( request );
-        if ( model == null )
-        {
-            return redirectView( request, VIEW_MANAGE_TEMPLATES );
-        }
-
-        HtmlTemplate template = AppTemplateService.getTemplate( TEMPLATE_MOVE_COMPOSITE, getLocale( ), model );
-        return getAdminPage( template.getHtml( ) );
-    }
-
-    /**
      * Process the FormDisplay moving action
      * 
      * @param request
@@ -711,25 +734,21 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
     @Action( ACTION_MOVE_COMPOSITE )
     public String doMoveComposite( HttpServletRequest request )
     {
-
-        boolean bGroupValidated = false;
-
         int nIdDisplay = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_DISPLAY ), -1 );
 
         if ( nIdDisplay == INTEGER_MINUS_ONE )
         {
-            redirectToViewManageForm( request );
+            return redirectView( request, VIEW_MANAGE_TEMPLATES );
         }
 
         if ( _formDisplay == null || _formDisplay.getId( ) != nIdDisplay )
         {
-            _formDisplay = FormDisplayHome.findByPrimaryKey( nIdDisplay );
+            _formDisplay = _templateDatabaseService.findDisplayByPrimaryKey( nIdDisplay );
         }
 
-        String strIsGroupValidated = request.getParameter( FormsConstants.PARAMETER_GROUP_VALIDATED );
-        if ( StringUtils.isNotBlank( strIsGroupValidated ) )
+        if ( _formDisplay == null )
         {
-            bGroupValidated = BooleanUtils.toBoolean( strIsGroupValidated );
+            return redirectView( request, VIEW_MANAGE_TEMPLATES );
         }
 
         int nIdStepTarget = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), INTEGER_MINUS_ONE );
@@ -742,65 +761,155 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
             return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _formDisplay.getStepId( ) );
         }
 
-        if ( nIdParentTarget != _nIdParentTarget )
-        {
-            bGroupValidated = false;
-        }
-
-        if ( !bGroupValidated )
+        if ( !isValidMoveTarget( _formDisplay, nIdStepTarget, nIdParentTarget, nDisplayOrderTarget ) )
         {
             addError( ERROR_STEP_OR_GROUP_NOT_VALIDATED, getLocale( ) );
-            return redirect( request, VIEW_MOVE_COMPOSITE, FormsConstants.PARAMETER_ID_DISPLAY, nIdDisplay );
+            return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _formDisplay.getStepId( ) );
         }
 
-        moveDisplay( _formDisplay, nIdStepTarget, nIdParentTarget, nDisplayOrderTarget );
+        // A template does not store any column: its displays all sit in the first one
+        moveDisplay( _formDisplay, nIdStepTarget, nIdParentTarget, FormLayout.FIRST_COLUMN, nDisplayOrderTarget );
 
         addInfo( INFO_MOVE_COMPOSITE_SUCCESSFUL, getLocale( ) );
 
         return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _formDisplay.getStepId( ) );
     }
 
+    /**
+     * Tells whether a display can be moved to the given place: a template holds a single step, so the target step is the one of the display, the target
+     * parent is the root level or a group of that step that is neither the display nor one of its descendants, and the position is one of those the parent
+     * offers
+     *
+     * @param formDisplay
+     *            the display to move
+     * @param nIdStepTarget
+     *            the target step
+     * @param nIdParentTarget
+     *            the target parent display, 0 for the root level
+     * @param nDisplayOrderTarget
+     *            the target position within the parent
+     * @return true if the move is allowed
+     */
+    private boolean isValidMoveTarget( FormDisplay formDisplay, int nIdStepTarget, int nIdParentTarget, int nDisplayOrderTarget )
+    {
+        if ( nIdStepTarget != formDisplay.getStepId( ) )
+        {
+            return false;
+        }
+
+        String strParent = String.valueOf( nIdParentTarget );
+        boolean bValidParent = getFormDisplayService( ).getTargetGroupDisplayListByStep( nIdStepTarget, formDisplay, getLocale( ) ).stream( )
+                .anyMatch( item -> strParent.equals( item.getCode( ) ) );
+        if ( !bValidParent )
+        {
+            return false;
+        }
+
+        boolean bMoveToDifferentGroup = formDisplay.getParentId( ) != nIdParentTarget;
+        String strPosition = String.valueOf( nDisplayOrderTarget );
+        return getFormDisplayService( ).getlistAvailablePositionsInGroup( nIdStepTarget, nIdParentTarget, bMoveToDifferentGroup, getLocale( ) ).stream( )
+                .anyMatch( item -> strPosition.equals( item.getCode( ) ) );
+    }
+
+    /**
+     * Duplicate the question whose identifier is in the request
+     * 
+     * @param request
+     *            The HTTP request
+     * @return The URL to go after performing the action
+     */
     @Action( value = ACTION_DUPLICATE_QUESTION )
     public String doDuplicateQuestion( HttpServletRequest request )
     {
-        String strReturnUrl = processQuestionDuplication( request );
+        int nIdTemplate = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE );
+        int nIdQuestion = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_TARGET ), FormsConstants.DEFAULT_ID_VALUE );
 
-        if ( strReturnUrl != null )
+        if ( !_templateService.duplicateQuestion( nIdTemplate, nIdQuestion ) )
         {
-            return redirect( request, strReturnUrl );
+            return redirectView( request, VIEW_MANAGE_TEMPLATES );
         }
-        else
-        {
-            addInfo( INFO_QUESTION_DUPLICATED, getLocale( ) );
-        }
-        return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, _template.getId( ) );
+        addInfo( INFO_QUESTION_DUPLICATED, getLocale( ) );
+
+        return redirect( request, VIEW_MODIFY_TEMPLATE, FormsConstants.PARAMETER_ID_STEP, nIdTemplate );
     }
 
-    @Action( ACTION_EXPORT_FORM )
-    public void doExportJson( HttpServletRequest request )
+    /**
+     * Build the URL to go back to after an error on question creation
+     * 
+     * @param request
+     *            The HTTP request
+     * @return The URL of the template modification view
+     */
+    private String getErrorReturnUrlOnCreation( HttpServletRequest request )
+    {
+        UrlItem errorReturnUrl = new UrlItem( JSP_MANAGE_TEMPLATES_STEP );
+        errorReturnUrl.addParameter( FormsConstants.PARAMETER_TARGET_VIEW, VIEW_MODIFY_TEMPLATE );
+        errorReturnUrl.addParameter( FormsConstants.PARAMETER_ID_STEP,
+                NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE ) );
+
+        return errorReturnUrl.getUrl( );
+    }
+
+    /**
+     * Build the URL to go back to after an error on question modification
+     * 
+     * @param request
+     *            The HTTP request
+     * @return The URL of the question modification view
+     */
+    private String getErrorReturnUrlOnModification( HttpServletRequest request )
+    {
+        UrlItem errorReturnUrl = new UrlItem( JSP_MANAGE_TEMPLATES_STEP );
+        errorReturnUrl.addParameter( FormsConstants.PARAMETER_TARGET_VIEW, VIEW_MODIFY_QUESTION );
+        errorReturnUrl.addParameter( FormsConstants.PARAMETER_ID_STEP,
+                NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE ) );
+        errorReturnUrl.addParameter( FormsConstants.PARAMETER_ID_QUESTION,
+                NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_QUESTION ), FormsConstants.DEFAULT_ID_VALUE ) );
+
+        return errorReturnUrl.getUrl( );
+    }
+
+    /**
+     * Download the template whose identifier is in the request as a JSON file. A read: the CSRF token is not required
+     * 
+     * @param request
+     *            The HTTP request
+     * @return null once the file is written, or the URL of the template list with an error when the template cannot be exported
+     */
+    @Action( value = ACTION_EXPORT_FORM, securityTokenDisabled = true )
+    public String doExportJson( HttpServletRequest request )
     {
         int nId = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE );
+        Step step = TemplateStepHome.findByPrimaryKey( nId );
 
-        if ( nId == FormsConstants.DEFAULT_ID_VALUE )
+        if ( step == null )
         {
             addError( ERROR_TEMPLATE_NOT_EXPORTED, getLocale( ) );
-            return;
+            return redirectView( request, VIEW_MANAGE_TEMPLATES );
         }
 
         try
         {
-            String content = TemplateJsonService.getInstance( ).jsonExportStep( -1, nId );
-            Step step = TemplateStepHome.findByPrimaryKey( nId );
-            download( content.getBytes( StandardCharsets.UTF_8 ), FileUtil.normalizeFileName( step.getTitle( ) ) + ".json", "application/json" );
+            String content = _templateJsonService.jsonExportStep( -1, nId );
+            download( content, FileUtil.normalizeFileName( step.getTitle( ) ) + ".json", CONTENT_TYPE_JSON );
+            return null;
         }
         catch( JsonProcessingException e )
         {
-            AppLogService.error( e.getMessage( ) );
+            AppLogService.error( "Forms template : the template {} could not be exported", nId, e );
             addError( ERROR_TEMPLATE_NOT_EXPORTED, getLocale( ) );
+            return redirectView( request, VIEW_MANAGE_TEMPLATES );
         }
     }
 
-    @Action( value = ACTION_IMPORT_STEP, securityTokenDisabled = true )
+    /**
+     * Import a template from the JSON file posted
+     * 
+     * @param request
+     *            The HTTP request
+     * @return The URL to go after performing the action
+     */
+    @Action( ACTION_IMPORT_STEP )
     public String doImportJson( HttpServletRequest request )
     {
         MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
@@ -808,17 +917,24 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
 
         try
         {
-            TemplateJsonService.getInstance( ).jsonImportStep( 0, new String( fileItem.get( ), StandardCharsets.UTF_8 ), getLocale( ) );
+            _templateJsonService.jsonImportStep( 0, new String( fileItem.get( ), StandardCharsets.UTF_8 ), getLocale( ) );
             addInfo( INFO_TEMPLATE_CREATED, getLocale( ) );
         }
-        catch( JsonProcessingException e )
+        catch( JsonProcessingException | RuntimeException e )
         {
-            AppLogService.error( e.getMessage( ) );
+            AppLogService.error( "Forms template : the template could not be imported", e );
             addError( ERROR_TEMPLATE_NOT_IMPORTED, getLocale( ) );
         }
         return redirectView( request, VIEW_MANAGE_TEMPLATES );
     }
 
+    /**
+     * Cancel the import
+     * 
+     * @param request
+     *            The HTTP request
+     * @return The URL of the template list
+     */
     @Action( value = ACTION_CANCEL_IMPORT, securityTokenDisabled = true )
     public String doCancelImport( HttpServletRequest request )
     {
@@ -845,24 +961,93 @@ public class TemplateStepJspBean extends AbstractFormQuestionJspBean
 
         try
         {
-            String content = TemplateJsonService.getInstance( ).jsonExportStep( -1, nId );
-            TemplateJsonService.getInstance( ).jsonImportStep( 0, content, getLocale( ) );
+            String content = _templateJsonService.jsonExportStep( -1, nId );
+            _templateJsonService.jsonImportStep( 0, content, getLocale( ) );
             addInfo( INFO_TEMPLATE_CREATED, getLocale( ) );
         }
-        catch( JsonProcessingException e )
+        catch( JsonProcessingException | RuntimeException e )
         {
-            AppLogService.error( e.getMessage( ) );
+            AppLogService.error( "Forms template : the template {} could not be copied", nId, e );
             addError( ERROR_TEMPLATE_NOT_COPIED, getLocale( ) );
         }
         return redirectView( request, VIEW_MANAGE_TEMPLATES );
     }
 
+    /**
+     * {@inheritDoc} The user must hold the permission on the template the request names: CREATE to create or import one, DELETE to remove one, MODIFY for
+     * every other view or action carrying a template identifier
+     */
+    @Override
+    public String processController( HttpServletRequest request, HttpServletResponse response ) throws AccessDeniedException
+    {
+        String strInvoked = getInvokedName( request, PARAMETER_ACTION );
+        if ( strInvoked == null )
+        {
+            strInvoked = getInvokedName( request, PARAMETER_VIEW );
+        }
+
+        if ( ACTION_CREATE_TEMPLATE.equals( strInvoked ) || ACTION_IMPORT_STEP.equals( strInvoked ) )
+        {
+            checkUserPermission( Template.RESOURCE_TYPE, RBAC.WILDCARD_RESOURCES_ID, TemplateResourceIdService.PERMISSION_CREATE, request, null );
+        }
+        else
+        {
+            int nIdTemplate = NumberUtils.toInt( request.getParameter( FormsConstants.PARAMETER_ID_STEP ), FormsConstants.DEFAULT_ID_VALUE );
+            if ( nIdTemplate != FormsConstants.DEFAULT_ID_VALUE )
+            {
+                String strPermission = ( ACTION_REMOVE_TEMPLATE.equals( strInvoked ) || VIEW_CONFIRM_REMOVE_TEMPLATE.equals( strInvoked ) )
+                        ? TemplateResourceIdService.PERMISSION_DELETE
+                        : TemplateResourceIdService.PERMISSION_MODIFY;
+                checkUserPermission( Template.RESOURCE_TYPE, String.valueOf( nIdTemplate ), strPermission, request, null );
+            }
+        }
+
+        return super.processController( request, response );
+    }
+
+    /**
+     * Gives the name of the action or view the request invokes, either as the value of the parameter or as the suffix of a parameter named
+     * prefix_name
+     * 
+     * @param request
+     *            The HTTP request
+     * @param strPrefix
+     *            action or view
+     * @return the name, or null when the request invokes none
+     */
+    private static String getInvokedName( HttpServletRequest request, String strPrefix )
+    {
+        String strName = request.getParameter( strPrefix );
+        if ( StringUtils.isNotEmpty( strName ) )
+        {
+            return strName;
+        }
+        String strNamePrefix = strPrefix + "_";
+        return request.getParameterMap( ).keySet( ).stream( ).filter( p -> p.startsWith( strNamePrefix ) ).map( p -> p.substring( strNamePrefix.length( ) ) )
+                .findFirst( ).orElse( null );
+    }
+
+    /**
+     * {@inheritDoc} The fallback page of this bean is the list of the templates, not the list of the forms
+     */
+    @Override
+    protected String getJspManageForm( HttpServletRequest request )
+    {
+        return AppPathService.getBaseUrl( request ) + JSP_MANAGE_TEMPLATES_STEP;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected IFormDatabaseService initFormDatabaseService( )
     {
         return _templateDatabaseService;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected IFormDisplayService initFormDisplayService( )
     {

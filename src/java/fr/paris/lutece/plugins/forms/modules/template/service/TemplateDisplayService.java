@@ -47,9 +47,15 @@ import fr.paris.lutece.plugins.forms.service.AbstractFormDisplayService;
 import fr.paris.lutece.plugins.forms.service.IFormDatabaseService;
 import fr.paris.lutece.util.ReferenceList;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Typed;
 import jakarta.inject.Inject;
 
+/**
+ * IFormDisplayService implementation for templates. Typed to its own class so that it never competes with the forms FormDisplayService for the
+ * IFormDisplayService injection points of plugin-forms.
+ */
 @ApplicationScoped
+@Typed( TemplateDisplayService.class )
 public class TemplateDisplayService extends AbstractFormDisplayService
 {
 	@Inject

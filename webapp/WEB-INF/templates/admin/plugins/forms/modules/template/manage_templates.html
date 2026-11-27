@@ -1,59 +1,128 @@
-<@row>
-    <@columns>
-		<@box color='primary'>
-			<@boxHeader title='#i18n{module.forms.template.manageTemplates.title}' class='is-align-items-center' boxTools=true>
-				<#if permission_create_template>
-	                <@aButton href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=createTemplate' buttonIcon='plus' title='#i18n{module.forms.template.manageTemplates.buttonAdd}' hideTitle=['xs','sm'] class='card-header-icon' color='secondary' />
-	                <@aButton title='#i18n{forms.manage_steps.buttonImport}' buttonIcon='upload' size='sm' params='data-toggle="modal" data-target="#importJsonModal" ' hideTitle=['xs','sm'] />
-                </#if>
-            </@boxHeader>
-            <@boxBody>
-            	<@table>
-                    <@tr>
-                        <@th>#i18n{module.forms.template.manageTemplates.columnTitle}</@th>
-                        <@th>#i18n{module.forms.template.manageTemplates.columnDescription}</@th>
-                        <@th>#i18n{module.forms.template.manageTemplates.columnActions}</@th>
-                    </@tr>
-                    <#list template_list as template>
-                    	<@tr>
-                            <@td>${template.title}</@td>
-                            <@td>${template.description}</@td>
-                            <@td>
-                            	<#if template.actions?exists>
-                            		 <#list template.actions as action>
-                            		 	<#assign color='' />
-                                        <#assign perm=action.permission?lower_case />
-                                        <#assign params='' />
-                                        <#if action.permission=='DELETE'>
-                                            <#assign color = 'danger' />
-                                            <#assign perm='' />
-										<#else>
-											<#assign color = 'primary' />
-                                        </#if>
-                                        <@aButton href='${action.url}&id_step=${template.id}' title='${action.name}' hideTitle=['all'] color='${color}' class='${perm}' buttonIcon=action.iconUrl params=params size='sm' />
-                            		 </#list>
-                            	</#if>
-                            </@td>
-                       	</@tr>
-                    </#list>
-                </@table>
-                <@paginationAdmin paginator=paginator combo=1 showcount=0 />
-            </@boxBody>
-		</@box>
-    </@columns>
-</@row>
-<@toastr infos=infos warnings=warnings errors=errors />
-<@modal id='importJsonModal'>
-	<@modalHeader modalTitle='#i18n{forms.manage_steps.buttonImport}' />
-	<@modalBody>
-		<@tform class='form' method='post' name='upload_form' action='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp' params='enctype="multipart/form-data"'>
-			<@formGroup labelKey='#i18n{forms.manageForm.labelImportFile}' helpKey='#i18n{forms.manageForm.labelImportFile.help}' rows=2>
-				<@input type='file' name='json_file'/>
-			</@formGroup>
-			<@formGroup>
-				<@button type='submit' name='action_doImportJson' buttonIcon='check' title='#i18n{portal.admin.message.buttonValidate}' />
-				<@button type='cancel' name='action_doCancelImport' buttonIcon='times' title='#i18n{portal.admin.message.buttonCancel}' cancel=true />
-			</@formGroup>
-		</@tform>
-	</@modalBody>
-</@modal>
+<#include "/admin/plugins/forms/modules/template/step_template_preview.html" />
+<#-- An action URL calling an action= (duplicateTemplate) is posted with its CSRF token; a view= or the JSON export stays a link -->
+<#macro templateActionItem url class>
+<#if url?contains('action=') && !url?contains('action=doExportJson')>
+	<@tform action=url?keep_before('?') method='post' class='d-inline'>
+		<#list url?keep_after('?')?split('&') as param><#if param?contains('=')><@input type='hidden' name=param?keep_before('=') value=param?keep_after('=') /></#if></#list>
+		<@input type='hidden' name='_csrftoken' value=(link_tokens[url?keep_after('action=')?keep_before('&')])!'' />
+		<@button type='submit' color='link' class=class><#nested></@button>
+	</@tform>
+<#else>
+	<@link href=url class=class><#nested></@link>
+</#if>
+</#macro>
+<@pageContainer>
+	<@pageColumn>
+		<#assign pageTitle><span class="avatar avatar-sm bg-purple-lt me-2"><@icon style='template' /></span>#i18n{module.forms.template.manageTemplates.title}</#assign>
+		<@pageHeader title=pageTitle >
+			<#if template_list?has_content>
+			<@tform type='inline'>
+				<@formGroup labelFor='search_templates' labelKey='#i18n{portal.system.manage_plugins.buttonFilter}' hideLabel=['all'] formStyle='inline'>
+					<@inputGroup>
+						<@input type='text' name='search_templates' id='search_templates' placeHolder='#i18n{portal.system.manage_plugins.buttonFilter}' params={"autocomplete": "off"} />
+						<@button color='primary' title='#i18n{portal.system.manage_plugins.buttonFilter}' buttonIcon='filter' hideTitle=['all'] />
+					</@inputGroup>
+				</@formGroup>
+			</@tform>
+			</#if>
+			<#if permission_create_template>
+				<@aButton href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=createTemplate' buttonIcon='plus' title='#i18n{module.forms.template.manageTemplates.buttonAdd}' hideTitle=['xs','sm','md'] color='primary' />
+				<@button type='button' buttonIcon='upload' title='#i18n{forms.manage_steps.buttonImport}' hideTitle=['xs','sm','md'] class='text-truncate ms-1' params={"data-bs-toggle": "modal", "data-bs-target": "#importJsonModal"} />
+			</#if>
+		</@pageHeader>
+		<#if permission_create_template>
+		<@modal id='importJsonModal' params={"tabindex": "-1", "aria-labelledby": "import-json-title", "aria-hidden": "true"}>
+			<@tform method='post' name='upload_form' action='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp' params={"enctype": "multipart/form-data"}>
+				<@modalHeader modalTitle='#i18n{forms.manage_steps.buttonImport}' id='import-json-title' />
+				<@modalBody>
+					<@formGroup labelFor='json_file' labelKey='#i18n{forms.manageForm.labelImportFile}' helpKey='#i18n{forms.manageForm.labelImportFile.help}' mandatory=true rows=2>
+						<@input type='file' name='json_file' id='json_file' mandatory=true params={"accept": ".json,application/json"} />
+					</@formGroup>
+				</@modalBody>
+				<@modalFooter>
+					<@button type='button' buttonIcon='x' title='#i18n{portal.util.labelCancel}' color='light' params={"data-bs-dismiss": "modal"} />
+					<@button type='submit' name='action_doImportJson' buttonIcon='check' title='#i18n{portal.util.labelValidate}' color='primary' />
+				</@modalFooter>
+			</@tform>
+		</@modal>
+		</#if>
+		<@messages infos=infos![] warnings=warnings![] errors=errors![] />
+		<#if template_list?has_content>
+			<@manageFeature layout='list' id='templates-list'>
+			<#list template_list as template>
+				<#assign actions = template.actions![] />
+				<#assign modifyAction = (actions?filter( a -> a.permission == 'MODIFY' && a.url?contains('view=modifyTemplate') )?first)! />
+				<#assign exportAction = (actions?filter( a -> a.url?contains('action=doExportJson') )?first)! />
+				<@manageFeatureItem id='template_${template.id}'>
+					<@manageFeatureItemColumn class='d-flex align-items-center gap-2 text-truncate'>
+						<#assign preview = (template_previews[template.id?c])! />
+						<#if preview?has_content>
+						<@stepTemplateThumbnail preview=preview width=96 class='flex-shrink-0 align-self-start' />
+						<#else>
+						<span class="avatar avatar-xs bg-purple-lt"><@icon style='template' /></span>
+						</#if>
+						<div class="text-truncate">
+						<#if modifyAction?has_content>
+						<a href="${modifyAction.url}&amp;id_step=${template.id}" class="text-reset fw-semibold searchable" title="#i18n{portal.util.labelModify} ${template.title!}">${template.title!}</a>
+						<#else>
+						<span class="fw-semibold searchable">${template.title!}</span>
+						</#if>
+						<#if template.description?has_content>
+						<div class="text-secondary small text-truncate"><span class="searchable">${template.description}</span></div>
+						</#if>
+						<#if preview?has_content>
+						<div class="text-secondary small text-truncate mt-1"><span class="badge bg-secondary-lt me-2">${preview.questionCount} <#if preview.questionCount gt 1>#i18n{module.forms.template.manageTemplates.labelQuestions}<#else>#i18n{module.forms.template.manageTemplates.labelQuestion}</#if></span><@stepTemplateFields preview=preview class='d-inline' /></div>
+						</#if>
+						</div>
+					</@manageFeatureItemColumn>
+					<@manageFeatureItemColumn auto=true align='end' class='d-flex align-items-center gap-2'>
+						<#if actions?has_content>
+						<div class="btn-actions">
+							<#if modifyAction?has_content>
+							<a href="${modifyAction.url}&amp;id_step=${template.id}" class="btn-action" title="#i18n{${modifyAction.nameKey}}"><@icon style=modifyAction.iconUrl! /><span class="visually-hidden">#i18n{${modifyAction.nameKey}} ${template.title!}</span></a>
+							</#if>
+							<#if exportAction?has_content>
+							<a href="${exportAction.url}&amp;id_step=${template.id}" class="btn-action" title="#i18n{${exportAction.nameKey}}"><@icon style=exportAction.iconUrl! /><span class="visually-hidden">#i18n{${exportAction.nameKey}} ${template.title!}</span></a>
+							</#if>
+							<div class="dropdown">
+								<a href="#" class="btn-action" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="#i18n{portal.util.labelActions} ${template.title!}"><i class="ti ti-dots" aria-hidden="true"></i><span class="visually-hidden">#i18n{portal.util.labelActions} ${template.title!}</span></a>
+								<div class="dropdown-menu dropdown-menu-end">
+								<#list actions as action>
+									<#if action.permission == 'DELETE'><div class="dropdown-divider"></div></#if>
+									<@templateActionItem url='${action.url}&id_step=${template.id}' class='dropdown-item${(action.permission == "DELETE")?then(" text-danger", "")}'><@icon style=action.iconUrl! class='me-2' /> #i18n{${action.nameKey}}</@templateActionItem>
+								</#list>
+								</div>
+							</div>
+						</div>
+						</#if>
+					</@manageFeatureItemColumn>
+				</@manageFeatureItem>
+			</#list>
+			</@manageFeature>
+			<#if paginator.itemsCount gte 10>
+				<@paginationAdmin paginator=paginator combo=1 showcount=0 />
+			</#if>
+		<#else>
+			<@card>
+			<#if permission_create_template>
+				<@empty title='#i18n{portal.util.labelNoItem}' iconName='template-off' actionTitle='#i18n{module.forms.template.manageTemplates.buttonAdd}' actionUrl='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=createTemplate' />
+			<#else>
+				<@empty title='#i18n{portal.util.labelNoItem}' iconName='template-off' />
+			</#if>
+			</@card>
+		</#if>
+	</@pageColumn>
+</@pageContainer>
+<#if template_list?has_content>
+<script type="module">
+import LuteceSearchList from './themes/shared/modules/luteceSearchList.js';
+new LuteceSearchList( document.querySelector('#search_templates'), document.querySelectorAll('#templates-list .list-group-item'), {
+	searchableChild: ['.searchable'],
+	highlight: true,
+	// Keep the filter value across form submits / page reloads.
+	persist: true,
+	persistKey: 'lutece-admin-forms-templates-list-search',
+});
+</script>
+</#if>
+<@scrollTopBtn />

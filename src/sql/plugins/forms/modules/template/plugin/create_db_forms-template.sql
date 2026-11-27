@@ -1,3 +1,7 @@
+-- liquibase formatted sql
+-- lutece runAfter:forms
+-- changeset forms-template:create_db_forms-template.sql
+-- preconditions onFail:MARK_RAN onError:WARN
 
 DROP TABLE IF EXISTS template_step;
 CREATE TABLE template_step (

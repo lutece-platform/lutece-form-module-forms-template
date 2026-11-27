@@ -1,14 +1,20 @@
-<@box>
-    <@boxHeader title='#i18n{module.forms.template.manageTemplates.title}' />
-    <@boxBody>
-        <@tform method='post' name='create_template' id='create_template' action='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp'>
-            <@formGroup labelFor='title' labelKey='#i18n{forms.create_step.labelTitle}' helpKey='#i18n{forms.create_step.labelTitle.help}' mandatory=true>
-                 <@input type='text' name='title' value='${step.title!}' />
-            </@formGroup>
-            <@formGroup labelFor='description' labelKey='#i18n{forms.create_step.labelDescription}' helpKey='#i18n{forms.create_step.labelDescription.help}' >
-                 <@input type='textarea' name='description'>${step.description!}</@input>
-            </@formGroup>
-            <@formsButton okAction='createTemplate' viewAction='manageTemplates' />
-        </@tform>
-    </@boxBody>
-</@box>
+<@pageContainer>
+	<@pageColumn>
+		<@pageHeader title='#i18n{module.forms.template.create_template.pageTitle}'>
+			<@aButton href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=manageTemplates' buttonIcon='arrow-left' title='#i18n{portal.util.labelBack}' color='light' />
+		</@pageHeader>
+		<@messages errors=errors![] />
+		<@tform method='post' name='create_template' id='create_template' action='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp' boxed=true>
+			<@formGroup labelFor='title' labelKey='#i18n{forms.create_step.labelTitle}' helpKey='#i18n{forms.create_step.labelTitle.help}' mandatory=true rows=2>
+				<@input type='text' name='title' id='title' value='${step.title!}' mandatory=true />
+			</@formGroup>
+			<@formGroup labelFor='description' labelKey='#i18n{forms.create_step.labelDescription}' helpKey='#i18n{forms.create_step.labelDescription.help}' rows=2>
+				<@input type='textarea' name='description' id='description'>${step.description!}</@input>
+			</@formGroup>
+			<@formGroup rows=2>
+				<@button type='submit' name='action_createTemplate' buttonIcon='check' title='#i18n{portal.util.labelValidate}' color='primary' />
+				<@aButton href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=manageTemplates' buttonIcon='x' title='#i18n{portal.util.labelCancel}' color='light' />
+			</@formGroup>
+		</@tform>
+	</@pageColumn>
+</@pageContainer>

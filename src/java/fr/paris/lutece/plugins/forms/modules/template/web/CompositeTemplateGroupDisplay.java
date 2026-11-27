@@ -236,4 +236,17 @@ public class CompositeTemplateGroupDisplay implements ICompositeDisplay
         // Only used when displaying the form in FO
         return null;
     }
+
+    @Override
+    public ICompositeDisplay filterFromListQuestion( List<Question> listQuestion )
+    {
+        // Only used when displaying the form in FO
+        return null;
+    }
+
+    @Override
+    public Integer getIterationNumber( )
+    {
+        return null;
+    }
 }

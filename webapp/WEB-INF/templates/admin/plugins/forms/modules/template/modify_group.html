@@ -1,59 +1,52 @@
-<@formBreadCrumb home='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp'>
-	<@breadcrumbItem><@link href='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp?view=modifyTemplate&id_step=${step.id}' title='Liste des modèles'>${step.title}</@link></@breadcrumbItem>
-	<@breadcrumbItem class='active is-active'>#i18n{forms.create_group.title}</@breadcrumbItem>
-</@formBreadCrumb>
-<@row>
-	<@columns>
-		<@box>
-			<@boxHeader title='#i18n{forms.modify_group.title}' />
-			<@boxBody>
-				<@tform class="form-horizontal" method="post" name="modify_group" action="jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp">
-					<@messages errors=errors />
-					<@input type='hidden' id='id_step' name='id_step' value='${step.id}' />
-					<@input type='hidden' id='id' name='id' value='${group.id}' />
-					
-					<@formGroup labelFor='title' labelKey='#i18n{forms.modify_group.labelTitle}' helpKey='#i18n{forms.modify_group.labelTitle.help}' mandatory=true>
-						<@input type='text' name='title' value='${group.title!}' />
-					</@formGroup>
-					<@formGroup labelKey='#i18n{forms.modify_group.labelDescription}' helpKey='#i18n{forms.modify_group.labelDescription.help}' >
-						<@input type='textarea' name='description' class='richtext'>${group.description!}</@input>
-					</@formGroup>
-					<@formGroup id='iterate_group'>
-						<#if group.iterationMin=1 && group.iterationMax=1 > 
-							<@button title='#i18n{forms.create_group.buttonManageIteration}' buttonIcon='hashtag' id='iterate' />
-						</#if>
-				   </@formGroup>
-					<div id="iteration_group">
-						<@formGroup labelKey='#i18n{forms.create_group.labelIterationMin}' helpKey='#i18n{forms.create_group.labelIterationMin.help}'>
-							<@input type='text' name='iterationMin' value='${group.iterationMin!}' />
-						</@formGroup>
-						<@formGroup labelKey='#i18n{forms.create_group.labelIterationMax}' helpKey='#i18n{forms.create_group.labelIterationMax.help}' >
-							<@input type='text' name='iterationMax' value='${group.iterationMax!}' />
-						</@formGroup>
-						<@formGroup labelKey='#i18n{forms.create_group.labelIterationAddLabel}' helpKey='#i18n{forms.create_group.labelIterationAddLabel.help}'>
-							<@input type='text' name='iterationAddLabel' value='${group.iterationAddLabel!}' />
-						</@formGroup>
-						<@formGroup labelKey='#i18n{forms.create_group.labelIterationRemoveLabel}' helpKey='#i18n{forms.create_group.labelIterationRemoveLabel.help}'>
-							<@input type='text' name='iterationRemoveLabel' value='${group.iterationRemoveLabel!}' />
-						</@formGroup>
-					</div>
-					<@formsButton okAction='modifyGroup' viewAction='manageQuestions' />
-				</@tform>
-			</@boxBody>
-		</@box>
-	</@columns>
-</@row>
-
+<#assign jsp='jsp/admin/plugins/forms/modules/template/ManageTemplatesStep.jsp' />
+<#assign iterationAccordionCollapsed=( group.iterationMin=1 && group.iterationMax=1 ) />
+<@pageContainer>
+	<@pageColumn>
+		<@pageHeader title='#i18n{forms.modify_group.title}'>
+			<@aButton href='${jsp}?view=modifyTemplate&id_step=${step.id}' buttonIcon='arrow-left' title='#i18n{portal.util.labelBack}' color='light' />
+		</@pageHeader>
+		<@formBreadCrumb home=jsp>
+			<@breadcrumbItem><@link href='${jsp}?view=modifyTemplate&id_step=${step.id}' title='#i18n{module.forms.template.manageTemplates.title}'>${step.title}</@link></@breadcrumbItem>
+			<@breadcrumbItem class='active'>#i18n{forms.modify_group.title}</@breadcrumbItem>
+		</@formBreadCrumb>
+		<@messages errors=errors![] />
+		<@tform method='post' name='modify_group' id='modify_group' action=jsp boxed=true>
+			<@input type='hidden' id='id_step' name='id_step' value='${step.id}' />
+			<@input type='hidden' id='id' name='id' value='${group.id}' />
+			<@formGroup labelFor='title' labelKey='#i18n{forms.create_group.labelTitle}' helpKey='#i18n{forms.create_group.labelTitle.help}' mandatory=true rows=2>
+				<@input type='text' name='title' id='title' value='${group.title!}' mandatory=true />
+			</@formGroup>
+			<@formGroup labelFor='description' labelKey='#i18n{forms.create_group.labelDescription}' helpKey='#i18n{forms.create_group.labelDescription.help}' rows=2>
+				<@input type='textarea' name='description' id='description' richtext=true>${group.description!}</@input>
+			</@formGroup>
+			<@formGroup rows=2>
+				<@accordion id='iterate_group' title='#i18n{forms.create_group.buttonManageIteration}' icon='number' collapsed=iterationAccordionCollapsed>
+					<@row id='iteration_group'>
+						<@columns>
+							<@formGroup labelFor='iterationMin' labelKey='#i18n{forms.create_group.labelIterationMin}' helpKey='#i18n{forms.create_group.labelIterationMin.help}' rows=2>
+								<@input type='number' name='iterationMin' id='iterationMin' value='${group.iterationMin!}' min=1 max=99 />
+							</@formGroup>
+							<@formGroup labelFor='iterationAddLabel' labelKey='#i18n{forms.create_group.labelIterationAddLabel}' helpKey='#i18n{forms.create_group.labelIterationAddLabel.help}' rows=2>
+								<@input type='text' name='iterationAddLabel' id='iterationAddLabel' value='${group.iterationAddLabel!}' />
+							</@formGroup>
+						</@columns>
+						<@columns>
+							<@formGroup labelFor='iterationMax' labelKey='#i18n{forms.create_group.labelIterationMax}' helpKey='#i18n{forms.create_group.labelIterationMax.help}' rows=2>
+								<@input type='number' name='iterationMax' id='iterationMax' value='${group.iterationMax!}' min=0 max=99 />
+							</@formGroup>
+							<@formGroup labelFor='iterationRemoveLabel' labelKey='#i18n{forms.create_group.labelIterationRemoveLabel}' helpKey='#i18n{forms.create_group.labelIterationRemoveLabel.help}' rows=2>
+								<@input type='text' name='iterationRemoveLabel' id='iterationRemoveLabel' value='${group.iterationRemoveLabel!}' />
+							</@formGroup>
+						</@columns>
+					</@row>
+				</@accordion>
+			</@formGroup>
+			<@formGroup rows=2>
+				<@button type='submit' name='action_modifyGroup' buttonIcon='check' title='#i18n{portal.util.labelValidate}' color='primary' />
+				<@aButton href='${jsp}?view=modifyTemplate&id_step=${step.id}' buttonIcon='x' title='#i18n{portal.util.labelCancel}' color='light' />
+			</@formGroup>
+		</@tform>
+	</@pageColumn>
+</@pageContainer>
 <#include "/admin/util/editor/editor.html" />
 <@initEditor />
-
-<script>
-<#if group.iterationMin=1 && group.iterationMax=1 > 
-    $('#iteration_group').toggle();
-<#else>    
-    $('#iterate_group').toggle();
-</#if>   
-$('#iterate').click( function(){
-    $('#iteration_group').toggle();
-});
-</script>

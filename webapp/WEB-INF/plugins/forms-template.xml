@@ -9,7 +9,7 @@
     <description>module.forms.template.module.description</description>
     <provider>module.forms.template.module.provider</provider>
     <provider-url>https://dev.lutece.paris.fr</provider-url>
-    <icon-url>images/admin/skin/feature_default_icon.png</icon-url>
+    <icon-url>themes/admin/shared/plugins/forms/images/forms.svg</icon-url>
     <copyright>City Of Paris</copyright>
     <db-pool-required>1</db-pool-required>
     

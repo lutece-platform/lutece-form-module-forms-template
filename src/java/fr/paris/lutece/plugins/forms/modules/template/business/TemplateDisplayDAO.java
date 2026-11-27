@@ -194,19 +194,19 @@ public final class TemplateDisplayDAO implements ITemplateFormDisplayDAO
      */
     private int getNextPositionInGroup( int nIdStep, int nIdParent, Plugin plugin )
     {
-        DAOUtil daoUtil = new DAOUtil( SQL_QUERY_NEXT_POSITION_BY_PARENT, plugin );
-        daoUtil.setInt( 1, nIdStep );
-        daoUtil.setInt( 2, nIdParent );
-        daoUtil.executeQuery( );
-
         int nNextPosition = 0;
 
-        if ( daoUtil.next( ) )
+        try ( DAOUtil daoUtil = new DAOUtil( SQL_QUERY_NEXT_POSITION_BY_PARENT, plugin ) )
         {
-            nNextPosition = daoUtil.getInt( 1 ) + 1;
-        }
+            daoUtil.setInt( 1, nIdStep );
+            daoUtil.setInt( 2, nIdParent );
+            daoUtil.executeQuery( );
 
-        daoUtil.close( );
+            if ( daoUtil.next( ) )
+            {
+                nNextPosition = daoUtil.getInt( 1 ) + 1;
+            }
+        }
 
         return nNextPosition;
     }
